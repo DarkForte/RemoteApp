@@ -15,7 +15,7 @@
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content">"
 	      
-		<TextView
+		<!-- <TextView
 	        android:id="@+id/textID"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content" 
@@ -27,7 +27,7 @@
 		    android:layout_height="wrap_content"
 		    android:textSize="20sp"
 		    android:textColor="#FF000000"
-		    android:text="" />	  
+		    android:text="" />	   -->
 		 
 		<TextView
 		    android:id="@+id/coodID"
@@ -36,25 +36,68 @@
 		    android:textSize="20sp"
 		    android:textColor="#FF000000"
 		    android:text="cood"/>
-		<TextView
+		<!-- <TextView
 		    android:id="@+id/oriID"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
 		    android:textSize="20sp"
 		    android:textColor="#FF000000"
-		    android:text="cood"/>
-		<Button
-		    android:id="@+id/BtnID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
-		    android:text="Send"/>
-		<TextView
+		    android:text="cood"/> -->
+		<!-- <TextView
 		    android:id="@+id/CalcResultID"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
 		    android:textSize="20sp"
 		    android:textColor="#FF000000"
-		    android:text="CalcResult"/>
+		    android:text="CalcResult"/> -->
+		
+		<Button
+		    android:id="@+id/forwardID"
+		    android:layout_height="wrap_content"
+		    android:layout_width="wrap_content" 
+		    android:textSize="30sp"
+		    android:text="前"/>
+		
+		<Button
+		    android:id="@+id/backwardID"
+		    android:layout_height="wrap_content"
+		    android:layout_width="wrap_content" 
+		    android:textSize="30sp"
+		    android:text="后"/>
+		
+		<Button
+		    android:id="@+id/leftID"
+		    android:layout_height="wrap_content"
+		    android:layout_width="wrap_content" 
+		    android:textSize="30sp"
+		    android:text="左"/>
+		
+		<Button
+		    android:id="@+id/rightID"
+		    android:layout_height="wrap_content"
+		    android:layout_width="wrap_content" 
+		    android:textSize="30sp"
+		    android:text="右"/>
+		
+		<Button
+		    android:id="@+id/sweepID"
+		    android:layout_height="wrap_content"
+		    android:layout_width="wrap_content" 
+		    android:textSize="30sp"
+		    android:text="清扫"/>
+		
+		<Button
+		    android:id="@+id/cleanID"
+		    android:layout_height="wrap_content"
+		    android:layout_width="wrap_content" 
+		    android:textSize="30sp"
+		    android:text="净化"/>
+		
+		 <Button
+		    android:id="@+id/BtnID"
+		    android:layout_height="wrap_content"
+		    android:layout_width="wrap_content" 
+		    android:textSize="30sp"
+		    android:text="Reconnect"/>
 	</LinearLayout>
 </RelativeLayout>

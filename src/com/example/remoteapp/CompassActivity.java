@@ -42,9 +42,16 @@ public class CompassActivity extends Activity implements SensorEventListener
 	TextView cood;
 	TextView ori;
 	TextView calcResult;
-	Button sendBtn;
+	Button reconnectBtn;
+	Button forwardBtn;
+	Button backwardBtn;
+	Button leftBtn;
+	Button rightBtn;
+	Button sweepBtn;
+	Button cleanBtn;
 	SensorManager mSensorManager;  
 	
+	String send_message;
 	//////Sensor
 	private float currentDegree=0f;  
 	float originalDegree = 0;
@@ -211,17 +218,44 @@ public class CompassActivity extends Activity implements SensorEventListener
 		}
 	}
     
+    class SendThread implements Runnable
+    {
+		@Override
+		public void run() 
+		{
+			PrintWriter cout;
+			try 
+			{
+				cout = new PrintWriter(the_app.socket.getOutputStream(),true);
+				cout.println(send_message);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+    	
+    }
+    
     private void init()
     {
     	the_app = (RemoteApp) getApplicationContext();
 	    
 	    imageView=(SuperImageView)findViewById(R.id.picView);  
-	    text=(TextView)findViewById(R.id.textID);
-	    now=(TextView)findViewById(R.id.nowID);
+	    //text=(TextView)findViewById(R.id.textID);
+	    //now=(TextView)findViewById(R.id.nowID);
 	    cood = (TextView)findViewById(R.id.coodID);
-	    ori = (TextView)findViewById(R.id.oriID);
-	    sendBtn = (Button)findViewById(R.id.BtnID);
-	    calcResult = (TextView)findViewById(R.id.CalcResultID);
+	   // ori = (TextView)findViewById(R.id.oriID);
+	    
+	    reconnectBtn = (Button)findViewById(R.id.BtnID);
+	    forwardBtn = (Button)findViewById(R.id.forwardID);
+	    backwardBtn = (Button)findViewById(R.id.backwardID);
+	    leftBtn = (Button)findViewById(R.id.leftID);
+	    rightBtn = (Button)findViewById(R.id.rightID);
+	    sweepBtn = (Button)findViewById(R.id.sweepID);
+	    cleanBtn = (Button)findViewById(R.id.cleanID);
+	    
+	   // calcResult = (TextView)findViewById(R.id.CalcResultID);
 	    mSensorManager=(SensorManager)getSystemService(SENSOR_SERVICE);  
 	    
 	    mapPoints = new ArrayList<PointType>();
@@ -284,6 +318,10 @@ public class CompassActivity extends Activity implements SensorEventListener
 		        point = point.screenToView(currentDegree/180*Math.PI);
 		        now_point = point;
 		        
+		        send_message = (point.x-MAP_ORIGIN.x) + " "+ (point.y-MAP_ORIGIN.y);
+		        SendThread send_thread = new SendThread();
+		        new Thread(send_thread).start();
+		        
 		        imageView.setTouchPoint(now_point);
 		        imageView.invalidate();
                 
@@ -294,15 +332,59 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    	
 	    });
 	    
-	    sendBtn.setOnClickListener(new OnClickListener()
+	    reconnectBtn.setOnClickListener(new OnClickListener()
 		{
 			@Override
 			public void onClick(View arg0) 
 			{
-				//do nothing
+				LoginThread login_thread = new LoginThread();
+				new Thread(login_thread).start();
 			}
 		});
 	    
+	    class BtnListener implements OnClickListener
+	    {
+
+			@Override
+			public void onClick(View source) 
+			{
+				// TODO Auto-generated method stub
+				if(source == forwardBtn)
+				{
+					send_message = "Forward";
+				}
+				else if(source == backwardBtn)
+				{
+					send_message = "Backward";
+				}
+				else if(source == leftBtn)
+				{
+					send_message = "Left";
+				}
+				else if(source == rightBtn)
+				{
+					send_message = "Right";
+				}
+				else if(source == sweepBtn)
+				{
+					send_message = "Sweep";
+				}
+				else if(source == cleanBtn)
+				{
+					send_message = "Clean";
+				}
+				SendThread send_thread = new SendThread();
+				new Thread(send_thread).start();
+			}
+	    	
+	    }
+	    
+	    forwardBtn.setOnClickListener(new BtnListener());
+	    backwardBtn.setOnClickListener(new BtnListener());
+	    leftBtn.setOnClickListener(new BtnListener());
+	    rightBtn.setOnClickListener(new BtnListener());
+	    sweepBtn.setOnClickListener(new BtnListener());
+	    cleanBtn.setOnClickListener(new BtnListener());
 	}  
 	
     @Override 
@@ -325,6 +407,14 @@ public class CompassActivity extends Activity implements SensorEventListener
         mSensorManager.unregisterListener(this);  
         super.onStop();  
     }  
+    
+    protected void onDestroy()
+    {
+    	send_message = "exit";
+    	SendThread send_thread = new SendThread();
+    	new Thread(send_thread).start();
+    	super.onDestroy();
+    }
    
     @Override 
     public void onAccuracyChanged(Sensor arg0, int arg1) 
@@ -342,8 +432,8 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    {  
 		    case Sensor.TYPE_ORIENTATION:  
 		        float degree=event.values[0]; 
-		        text.setText( degree + "" );
-		        now.setText( originalDegree+"\n" +currentDegree);
+		        //text.setText( degree + "" );
+		        //now.setText( originalDegree+"\n" +currentDegree);
 		        if(lock==false)
 		        {
 		        	originalDegree = (degree + originalDegree)/2;

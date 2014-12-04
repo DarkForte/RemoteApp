@@ -38,7 +38,7 @@ static void *netInput(void *dat)
 		string x;
 		app_socket>>x;
 		cout<<x<<endl;
-		a = atof(x.c_str());
+		/*a = atof(x.c_str());
 		cout<<"a: "<<a<<endl;
 		
 		app_socket>>x;
@@ -50,7 +50,7 @@ static void *netInput(void *dat)
 		cout<<"pushed into input_q!"<<endl;
 		input_q.push(a);
 		input_q.push(b);
-		UNLOCK(input_lock);
+		UNLOCK(input_lock);*/
 	}
 }
 
@@ -132,8 +132,6 @@ int main ( int argc, int argv[] )
 	pthread_mutex_init(&output_lock, NULL);
 	cout << "running....\n";
 
-	//pthread_join(thread1,NULL);
-
 	try
 	{
 		// Create the socket
@@ -146,7 +144,7 @@ int main ( int argc, int argv[] )
 			server.accept ( app_socket );
 			cout<<"connection detected!"<<endl;
 			
-			//pthread_create(&cin_thread, NULL, netInput, NULL);
+			pthread_create(&cin_thread, NULL, netInput, NULL);
 			pthread_create(&calc_thread, NULL, calc, NULL);
 			
 			while ( true )
