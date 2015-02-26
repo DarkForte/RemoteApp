@@ -61,10 +61,10 @@ public class PointType
 	
 	public PointType XYtoView(PointType origin)
 	{
-		PointType temp = new PointType(x,y);
+		//Android screen axis: ¡úx ¡ýy 
 		PointType ret = new PointType();
-		ret.y = -temp.x;
-		ret.x = -temp.y;
+		ret.x = x;
+		ret.y = -y;
 		
 		ret.x+=origin.x;
 		ret.y+=origin.y;

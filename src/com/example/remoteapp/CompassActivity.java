@@ -64,42 +64,71 @@ public class CompassActivity extends Activity implements SensorEventListener
     LoginThread loginThread;
     NetThread netThread;
     
-    PointType now_point;
-    List<PointType> mapPoints;
+    PointType finger_point;
+    //List<PointType> mapPoints;
+    List<Segment> segments;
     
-    final PointType MAP_ORIGIN = new PointType(1280/2, 800/2);
+    PointType MAP_ORIGIN;
     
     final double UNKNOWN = -1e4;
     
     PointType sum_move = new PointType(0,0);
-    double sum_rotate = 0;
+    //double sum_rotate = 0;
     
     //in order to place the picture in a proper place
-    double init_rotate = Math.atan(4.0/3.0);
+    
+    //double init_rotate = Math.atan(4.0/3.0);
     PointType picMove = new PointType(-100,0);
     
-    class NetThread implements Runnable
+    class NetThread implements Runnable //get the information from the server
     {
-    	double dx, dy, rotate;
-    	
+    	//double dx, dy, rotate;
 		@Override
 		public void run() 
 		{
-			
 			try 
 			{
 				BufferedReader in = new BufferedReader(new InputStreamReader(the_app.socket.getInputStream()));
 				while(true)
 				{
-					/*PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(the_app.socket.getOutputStream())), true);
-					out.println(now_point.x);
-					out.println(now_point.y);
-					 */
 					String input = in.readLine();
+					//System.out.println("1: "+input);
 
 					if(input != null)
 					{
-						//System.out.println(input);
+				    	int n; 
+						input = input.substring(4);
+						n = Integer.parseInt(input);
+						
+						segments.clear();
+						
+						int i;
+						for(i=1; i<=n; i++)
+						{
+					    	double point_data[] = new double[10];
+					    	input = in.readLine();
+					    	//System.out.println("2: "+input);
+					    	
+					    	String point_data_string[] = new String[10];
+					    	point_data_string = input.split(" ");
+					    	int j;
+					    	for(j=0; j<=4;j++)
+					    	{
+					    		point_data[j] = Double.parseDouble(point_data_string[j]);
+					    	}
+					    	
+					    	
+					    	PointType s = new PointType(point_data[0], point_data[1]);
+					    	PointType e = new PointType(point_data[2], point_data[3]);
+					    	
+					    	//todo:transform here
+					    	
+					    	segments.add(new Segment(s,e));
+					    	
+						}
+						
+						//
+						/*//System.out.println(input);
 						
 						dx = Double.parseDouble(input);
 						input = in.readLine();
@@ -111,16 +140,6 @@ public class CompassActivity extends Activity implements SensorEventListener
 						//Modify start
 
 						int i;
-						/*for(i=0; i<mapPoints.size(); i++)
-						{
-							PointType now = mapPoints.get(i);
-							now.move(-dx, -dy);
-							//System.out.println("now before spin:" + now);
-							now = now.spin(-rotate);
-							//System.out.println("now after spin:" + now);
-							mapPoints.set(i, now);
-						}*/
-						//System.out.println("init_rotate: "+init_rotate);
 						
 						PointType move_vec = new PointType(dx, dy);
 						sum_rotate += rotate;
@@ -163,7 +182,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 						}
 						//System.out.println("ans: "+ans);
 
-						imageView.setPointList(mapPoints);
+						imageView.setPointList(mapPoints);*/
 
 						Message msg = new Message();
 						msg.obj = "redraw";
@@ -240,6 +259,7 @@ public class CompassActivity extends Activity implements SensorEventListener
     private void init()
     {
     	the_app = (RemoteApp) getApplicationContext();
+    	MAP_ORIGIN = new PointType(the_app.WIDTH/2, the_app.HEIGHT/2);
 	    
 	    imageView=(SuperImageView)findViewById(R.id.picView);  
 	    //text=(TextView)findViewById(R.id.textID);
@@ -258,10 +278,10 @@ public class CompassActivity extends Activity implements SensorEventListener
 	   // calcResult = (TextView)findViewById(R.id.CalcResultID);
 	    mSensorManager=(SensorManager)getSystemService(SENSOR_SERVICE);  
 	    
-	    mapPoints = new ArrayList<PointType>();
+	    segments = new ArrayList<Segment>();
 	    
 	    imageView.setMapOrigin(MAP_ORIGIN);
-	    imageView.setPointList(mapPoints);
+	    imageView.setPointList(segments);
 	    
 	    return;
     }
@@ -299,7 +319,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 					//for(i=0;i<mapPoints.size(); i++)
 					//	System.out.println(mapPoints.get(i));
 					
-					imageView.setPointList(mapPoints);
+					imageView.setPointList(segments);
 					imageView.invalidate();
 				}
 			}
@@ -316,13 +336,13 @@ public class CompassActivity extends Activity implements SensorEventListener
 		        point.x=e.getX();
 		        point.y=e.getY();
 		        point = point.screenToView(currentDegree/180*Math.PI);
-		        now_point = point;
+		        finger_point = point;
 		        
 		        send_message = (point.x-MAP_ORIGIN.x) + " "+ (point.y-MAP_ORIGIN.y);
 		        SendThread send_thread = new SendThread();
 		        new Thread(send_thread).start();
 		        
-		        imageView.setTouchPoint(now_point);
+		        imageView.setTouchPoint(finger_point);
 		        imageView.invalidate();
                 
                 cood.setText("X: "+ e.getX() +" Y: " + e.getY() );
@@ -351,23 +371,23 @@ public class CompassActivity extends Activity implements SensorEventListener
 				// TODO Auto-generated method stub
 				if(source == forwardBtn)
 				{
-					send_message = "Forward";
+					send_message = "Forward\n";
 				}
 				else if(source == backwardBtn)
 				{
-					send_message = "Backward";
+					send_message = "Backward\n";
 				}
 				else if(source == leftBtn)
 				{
-					send_message = "Left";
+					send_message = "Left\n";
 				}
 				else if(source == rightBtn)
 				{
-					send_message = "Right";
+					send_message = "Right\n";
 				}
 				else if(source == sweepBtn)
 				{
-					send_message = "Sweep";
+					send_message = "Start Clean\n";
 				}
 				else if(source == cleanBtn)
 				{
@@ -410,7 +430,7 @@ public class CompassActivity extends Activity implements SensorEventListener
     
     protected void onDestroy()
     {
-    	send_message = "exit";
+    	send_message = "Exit\n";
     	SendThread send_thread = new SendThread();
     	new Thread(send_thread).start();
     	super.onDestroy();
@@ -427,7 +447,8 @@ public class CompassActivity extends Activity implements SensorEventListener
     @Override 
     public void onSensorChanged(SensorEvent event) 
     {  
-	    int sensortype=event.sensor.getType();  
+	    /*
+    	int sensortype=event.sensor.getType();  
 	    switch(sensortype)
 	    {  
 		    case Sensor.TYPE_ORIENTATION:  
@@ -449,8 +470,8 @@ public class CompassActivity extends Activity implements SensorEventListener
 		        break;
 		
 	    }  
-   		
-    }  
+   		*/
+    }
     
     
    

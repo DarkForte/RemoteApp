@@ -16,10 +16,10 @@ public class SuperImageView extends ImageView
 {
 	Paint paint;
 	Bitmap bmp=BitmapFactory.decodeResource(this.getContext().getResources(), R.drawable.pic2);
-	PointType touchPoint;
+	PointType finget_point;
 	PointType MAP_ORIGIN;
 	
-	List<PointType> toDraw;
+	List<Segment> toDraw;
 	
 	public SuperImageView(Context context) 
 	{
@@ -41,11 +41,11 @@ public class SuperImageView extends ImageView
 	
 	public void setTouchPoint(PointType p)
 	{
-		touchPoint = p;
+		finget_point = p;
 		return;
 	}
 	
-	public void setPointList(List<PointType> list)
+	public void setPointList(List<Segment> list)
 	{
 		toDraw = list;
 		return;
@@ -68,24 +68,27 @@ public class SuperImageView extends ImageView
         Paint paint = new Paint();
         
         //Draw map
-        
         paint. setColor(Color.BLUE);
+        paint. setStrokeWidth(3);
         int i;
         for(i=0; i<toDraw.size();i++)
         {
-        	PointType now = toDraw.get(i);
-        	PointType tmp = new PointType(now.x, now.y);
-        	tmp = tmp.XYtoView(MAP_ORIGIN);
-        	canvas.drawCircle((float)tmp.x, (float)tmp.y, 2, paint);
+        	Segment now = toDraw.get(i);
+        	
+        	PointType tmp_start = now.s;
+        	tmp_start = tmp_start.XYtoView(MAP_ORIGIN);
+        	PointType tmp_end = now.e;
+        	tmp_end = tmp_end.XYtoView(MAP_ORIGIN);
+        	
+        	canvas.drawLine((float)tmp_start.x, (float)tmp_start.y, 
+        			(float)tmp_end.x, (float)tmp_end.y, paint);
         }
         
         //Draw touchPoint
-        
         paint.setColor(Color.RED);
-        if(touchPoint != null)
-        	canvas.drawCircle( (float)touchPoint.x, (float)touchPoint.y, 10, paint);
+        if(finget_point != null)
+        	canvas.drawCircle( (float)finget_point.x, (float)finget_point.y, 10, paint);
         
-        //imageView.setImageBitmap(newb);
         return;
 	}
 

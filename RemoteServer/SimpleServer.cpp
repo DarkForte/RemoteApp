@@ -1,6 +1,6 @@
 #include "ServerSocket.h"
 #include "SocketException.h"
-#include "ztb.h"
+//#include "ztb.h"
 #include <string>
 #include <iostream>
 #include <unistd.h>
@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <sstream>
 
 #define LOCK(m) pthread_mutex_lock(&m)
 #define TRYLOCK(m) pthread_mutex_trylock(&m)
@@ -30,6 +31,8 @@ const int GOT_LOCK = 0;
 const double PI = acos(-1.0);
 int trash;
 
+stringstream converter;
+
 static void *netInput(void *dat)
 {
 	double a,b;
@@ -37,7 +40,7 @@ static void *netInput(void *dat)
 	{
 		string x;
 		app_socket>>x;
-		cout<<x<<endl;
+		cout<<x;
 		/*a = atof(x.c_str());
 		cout<<"a: "<<a<<endl;
 		
@@ -57,73 +60,34 @@ static void *netInput(void *dat)
 
 static void *calc(void *dat)
 {
-	ztb_play();
+	//ztb_play();
 	
-	/*freopen("data_for_sb.txt", "r", stdin);
+	cout<<"calcthread entered!"<<endl;
+	int n=0;
+	int x=0;
+	int y=0;
+	int dx = 30;
+	int dy = 40;
 	while(true)
 	{
+		n++;
 		LOCK(output_lock);
-		double now1, now2, now3;
-		int tmp = scanf("%lf %lf %lf", &now1, &now2, &now3);
-		if(tmp<3)
-		{
-			UNLOCK(output_lock);
-			continue;
-		}
 		
-		cout<<"cin: "<<now1<<" "<<now2<<" "<<now3<<endl;
-		output_q.push(now1);
-		output_q.push(now2);
-		output_q.push(now3);
-		
-		while(true)
+		output_q.push(n);
+		int i,j;
+		for(i=1; i<=n; i++)
 		{
-			double x,y;
-
-			scanf("%lf %lf", &x, &y);
 			output_q.push(x);
 			output_q.push(y);
-			if(x<-1e4 && y<-1e4)
-				break;
+			output_q.push(x+dx);
+			output_q.push(y+dy);
+			x+=50;
+			y+=0;
 		}
+		
 		UNLOCK(output_lock);
-		
-		usleep(1000000);//1s
-	}*/
-	
-	/*double ans;
-	while(true)
-	{
-	    LOCK(input_lock)
-		
-		if(!input_q.empty())
-		{
-			cout<<"input_q not empty!"<<endl;
-			double a = input_q.front();
-			input_q.pop();
-			double b = input_q.front();
-			input_q.pop();
-			ans = a+b;
-			
-			LOCK(output_lock);
-			cout<<"pushing to output q!"<<endl;
-			output_q.push(ans);
-			UNLOCK(output_lock);
-		}
-			
-		UNLOCK(input_lock);	
-	}*/
-	
-	/*int i=20;
-	LOCK(mutex1);
-	while(--i)
-	{
-	  cout<<"This is thread2"<<endl;
-	  usleep(300000);
+		sleep(2);
 	}
-	UNLOCK(mutex1);
-	pthread_exit(NULL);*/
-
 }
 
 int main ( int argc, int argv[] )
@@ -152,14 +116,35 @@ int main ( int argc, int argv[] )
 				LOCK(output_lock);
 				if( !output_q.empty())
 				{
-					double now = output_q.front();
+					string buffer;
+					int n = output_q.front();
 					output_q.pop();
-					cout<<now<<endl;
 					
-					char buffer[100]={};
-					sprintf(buffer, "%lf\n", now);
-					string now_str(buffer);
+					converter.clear();
+					converter<<n;
+					converter>>buffer;
+					string now_str = "Map ";
+					now_str += buffer+"\n";
+					
+					cout<<now_str;
 					app_socket<<now_str;
+					
+					now_str.clear();
+					for(int i=1; i<=n; i++)
+					{
+						for(int j=1; j<=4; j++)
+						{
+							converter.clear();
+							converter<<output_q.front();
+							output_q.pop();
+							converter>>buffer;
+							now_str += buffer +" ";
+						}
+						now_str += "0\n";
+						cout<<now_str;
+						app_socket<<now_str;
+						now_str.clear();
+					}
 				}
 				UNLOCK(output_lock);
 			}
