@@ -121,8 +121,6 @@ public class CompassActivity extends Activity implements SensorEventListener
 					    	PointType s = new PointType(point_data[0], point_data[1]);
 					    	PointType e = new PointType(point_data[2], point_data[3]);
 					    	
-					    	//todo:transform here
-					    	
 					    	segments.add(new Segment(s,e));
 					    	
 						}
@@ -335,10 +333,11 @@ public class CompassActivity extends Activity implements SensorEventListener
 		        PointType point = new PointType();
 		        point.x=e.getX();
 		        point.y=e.getY();
-		        point = point.screenToView(currentDegree/180*Math.PI);
+		        //point = point.screenToView(currentDegree/180*Math.PI, MAP_ORIGIN);
 		        finger_point = point;
 		        
-		        send_message = (point.x-MAP_ORIGIN.x) + " "+ (point.y-MAP_ORIGIN.y);
+		        //send_message = (point.x-MAP_ORIGIN.x) + " "+ (point.y-MAP_ORIGIN.y);
+		        send_message = point.toString();
 		        SendThread send_thread = new SendThread();
 		        new Thread(send_thread).start();
 		        
@@ -447,14 +446,12 @@ public class CompassActivity extends Activity implements SensorEventListener
     @Override 
     public void onSensorChanged(SensorEvent event) 
     {  
-	    /*
+	    
     	int sensortype=event.sensor.getType();  
 	    switch(sensortype)
 	    {  
 		    case Sensor.TYPE_ORIENTATION:  
 		        float degree=event.values[0]; 
-		        //text.setText( degree + "" );
-		        //now.setText( originalDegree+"\n" +currentDegree);
 		        if(lock==false)
 		        {
 		        	originalDegree = (degree + originalDegree)/2;
@@ -463,14 +460,12 @@ public class CompassActivity extends Activity implements SensorEventListener
 		        		lock=true;
 		        	return;
 		        }
-		        RotateAnimation ra=new RotateAnimation(currentDegree, originalDegree-degree,Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,0.5f);  
-		        ra.setDuration(800);  
-		        imageView.startAnimation(ra);  
+		        imageView.setRotation(originalDegree - degree);
 		        currentDegree=originalDegree-degree;  
 		        break;
 		
 	    }  
-   		*/
+   		
     }
     
     

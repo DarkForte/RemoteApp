@@ -1,5 +1,6 @@
 package com.example.remoteapp;
 
+import it.sephiroth.android.library.imagezoom.ImageViewTouch;
 import java.util.List;
 
 import android.content.Context;
@@ -12,7 +13,7 @@ import android.graphics.Bitmap.Config;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
-public class SuperImageView extends ImageView
+public class SuperImageView extends ImageViewTouch
 {
 	Paint paint;
 	Bitmap bmp=BitmapFactory.decodeResource(this.getContext().getResources(), R.drawable.pic2);
@@ -76,9 +77,9 @@ public class SuperImageView extends ImageView
         	Segment now = toDraw.get(i);
         	
         	PointType tmp_start = now.s;
-        	tmp_start = tmp_start.XYtoView(MAP_ORIGIN);
+        	tmp_start = tmp_start.centerXYToTopLeftXY(MAP_ORIGIN);
         	PointType tmp_end = now.e;
-        	tmp_end = tmp_end.XYtoView(MAP_ORIGIN);
+        	tmp_end = tmp_end.centerXYToTopLeftXY(MAP_ORIGIN);
         	
         	canvas.drawLine((float)tmp_start.x, (float)tmp_start.y, 
         			(float)tmp_end.x, (float)tmp_end.y, paint);

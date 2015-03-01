@@ -3,6 +3,7 @@ package com.example.remoteapp;
 
 public class PointType
 {
+	//Android screen axis: ¡úx ¡ýy 
 	public double x;
 	public double y;
 	
@@ -25,23 +26,6 @@ public class PointType
 	    return ret;
 	}
 	
-	public PointType screenToView(double little_a)
-	{
-		PointType ret = new PointType();
-
-		PointType AO = new PointType(-640.0,-400.0);
-		PointType AX = new PointType(x-640.0, y-400.0);
-		PointType AX2 = AX.spin(-little_a);
-
-		ret.x = AX2.x - AO.x;
-		ret.y = AX2.y - AO.y;
-
-		//ori.setText("AX: " + AX.x + " " + AX.y + "\nAX2: " + AX2.x + " " + AX2.y
-		// + "\nret: " + ret.x + " "+ret.y);
-
-		return ret;
-	}
-	
 	public void move(double dx, double dy)
 	{
 		x+=dx;
@@ -59,9 +43,9 @@ public class PointType
 		return ret;
 	}
 	
-	public PointType XYtoView(PointType origin)
+	public PointType centerXYToTopLeftXY(PointType origin)
 	{
-		//Android screen axis: ¡úx ¡ýy 
+		
 		PointType ret = new PointType();
 		ret.x = x;
 		ret.y = -y;
