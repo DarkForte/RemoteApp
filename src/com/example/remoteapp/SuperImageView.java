@@ -12,11 +12,12 @@ import android.graphics.Paint;
 import android.graphics.Bitmap.Config;
 import android.util.AttributeSet;
 import android.widget.ImageView;
+import com.polites.android.*;
 
 public class SuperImageView extends ImageViewTouch
 {
 	Paint paint;
-	Bitmap bmp=BitmapFactory.decodeResource(this.getContext().getResources(), R.drawable.pic2);
+	//Bitmap bmp=BitmapFactory.decodeResource(this.getContext().getResources(), R.drawable.pic2048);
 	PointType finget_point;
 	PointType MAP_ORIGIN;
 	
@@ -64,7 +65,7 @@ public class SuperImageView extends ImageViewTouch
 		// TODO Auto-generated method stub
 		super.onDraw(canvas);
 
-		canvas.drawBitmap(bmp, 0, 0, null);
+		//canvas.drawBitmap(bmp, 0, 0, null);
 		
         Paint paint = new Paint();
         

@@ -8,8 +8,7 @@
 	    android:id="@+id/picView" 
 	    android:layout_width="fill_parent" 
 	    android:layout_height="fill_parent" 
-	    android:scaleType="fitCenter"
-	    android:src="@drawable/pic2" />
+	    android:scaleType="matrix" />
 	
 	<LinearLayout
 	    android:orientation="vertical"

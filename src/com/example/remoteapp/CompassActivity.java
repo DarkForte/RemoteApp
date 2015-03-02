@@ -14,6 +14,9 @@ import java.util.List;
 
 import android.app.Activity;  
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.hardware.Sensor;  
 import android.hardware.SensorEvent;  
 import android.hardware.SensorEventListener;  
@@ -21,6 +24,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;  
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -64,7 +68,7 @@ public class CompassActivity extends Activity implements SensorEventListener
     LoginThread loginThread;
     NetThread netThread;
     
-    PointType finger_point;
+    PointType draw_point;
     //List<PointType> mapPoints;
     List<Segment> segments;
     
@@ -278,6 +282,9 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    
 	    segments = new ArrayList<Segment>();
 	    
+	    Bitmap bmp=BitmapFactory.decodeResource(this.getBaseContext().getResources(), 
+	    		R.drawable.pic2048);
+	    imageView.setImageBitmap(bmp);
 	    imageView.setMapOrigin(MAP_ORIGIN);
 	    imageView.setPointList(segments);
 	    
@@ -330,21 +337,43 @@ public class CompassActivity extends Activity implements SensorEventListener
 			public boolean onTouch(View v, MotionEvent e) 
 			{
 				// TODO Auto-generated method stub
-		        PointType point = new PointType();
-		        point.x=e.getX();
-		        point.y=e.getY();
-		        //point = point.screenToView(currentDegree/180*Math.PI, MAP_ORIGIN);
-		        finger_point = point;
+				
+				//raw_point is the point relative to the view
+		        PointType raw_point = new PointType();
+		        raw_point.x=e.getX();
+		        raw_point.y=e.getY();
+		        Log.d("origin_point", "Origin TouchPoint: "+ raw_point);
 		        
-		        //send_message = (point.x-MAP_ORIGIN.x) + " "+ (point.y-MAP_ORIGIN.y);
-		        send_message = point.toString();
+		        
+		        PointType point_on_map = new PointType(raw_point.x, raw_point.y);
+		        
+		        Matrix transform = imageView.getImageViewMatrix();
+		        Log.d("matrix","matrix_origin: "+transform);
+		        Matrix transform_invert = new Matrix();
+		        transform.invert(transform_invert);
+		        Log.d("matrix","matrix_after: "+ transform_invert);
+                
+		        float touch_array[] = new float[2];
+		        touch_array[0] = (float)point_on_map.x;
+		        touch_array[1] = (float)point_on_map.y;
+		        transform_invert.mapPoints(touch_array);
+		        point_on_map.x = touch_array[0];
+		        point_on_map.y = touch_array[1];
+		        
+		        send_message = point_on_map.toString();
 		        SendThread send_thread = new SendThread();
 		        new Thread(send_thread).start();
 		        
-		        imageView.setTouchPoint(finger_point);
+		        cood.setText("X: "+ point_on_map.x +" Y: " + point_on_map.y );
+		        
+		        //draw_point is the point you ask to draw, which is the
+		        //same as raw_point. No need to be changed since the
+		        //Imageview do not change.
+		        draw_point = raw_point;
+		        imageView.setTouchPoint(draw_point);
 		        imageView.invalidate();
+		        
                 
-                cood.setText("X: "+ e.getX() +" Y: " + e.getY() );
                 
 				return false;
 			}
