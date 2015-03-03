@@ -1,6 +1,8 @@
 package com.example.remoteapp;
 
 import it.sephiroth.android.library.imagezoom.ImageViewTouch;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
@@ -8,16 +10,18 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Bitmap.Config;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.ImageView;
-import com.polites.android.*;
 
 public class SuperImageView extends ImageViewTouch
 {
 	Paint paint;
-	//Bitmap bmp=BitmapFactory.decodeResource(this.getContext().getResources(), R.drawable.pic2048);
+	Bitmap bmp=BitmapFactory.decodeResource(this.getContext().getResources(), 
+			R.drawable.pic2048).copy(Bitmap.Config.ARGB_8888, true);
 	PointType finget_point;
 	PointType MAP_ORIGIN;
 	
@@ -49,7 +53,23 @@ public class SuperImageView extends ImageViewTouch
 	
 	public void setPointList(List<Segment> list)
 	{
-		toDraw = list;
+		toDraw = new ArrayList<Segment>(list);
+		return;
+	}
+	
+	public void setPointListWithMatrix(List<Segment> list, Matrix matrix)
+	{
+		toDraw = new ArrayList<Segment>();
+		int i;
+		for(i=0; i<list.size();i++)
+		{
+			Segment seg_now = new Segment(list.get(0));
+			//Log.d("segment", "before: " + list.get(0));
+			seg_now = seg_now.transWithMatrix(matrix);
+			//Log.d("segment", "after: " + list.get(0));
+			toDraw.add(seg_now);
+		}
+		
 		return;
 	}
 	
@@ -64,25 +84,25 @@ public class SuperImageView extends ImageViewTouch
 	{   
 		// TODO Auto-generated method stub
 		super.onDraw(canvas);
-
-		//canvas.drawBitmap(bmp, 0, 0, null);
+		
+		Canvas bmp_canvas = new Canvas(bmp);
 		
         Paint paint = new Paint();
         
         //Draw map
         paint. setColor(Color.BLUE);
-        paint. setStrokeWidth(3);
+        paint. setStrokeWidth(10);
         int i;
         for(i=0; i<toDraw.size();i++)
         {
         	Segment now = toDraw.get(i);
         	
         	PointType tmp_start = now.s;
-        	tmp_start = tmp_start.centerXYToTopLeftXY(MAP_ORIGIN);
+        	//tmp_start = tmp_start.centerXYToTopLeftXY(MAP_ORIGIN);
         	PointType tmp_end = now.e;
-        	tmp_end = tmp_end.centerXYToTopLeftXY(MAP_ORIGIN);
+        	//tmp_end = tmp_end.centerXYToTopLeftXY(MAP_ORIGIN);
         	
-        	canvas.drawLine((float)tmp_start.x, (float)tmp_start.y, 
+        	bmp_canvas.drawLine((float)tmp_start.x, (float)tmp_start.y, 
         			(float)tmp_end.x, (float)tmp_end.y, paint);
         }
         
@@ -91,6 +111,8 @@ public class SuperImageView extends ImageViewTouch
         if(finget_point != null)
         	canvas.drawCircle( (float)finget_point.x, (float)finget_point.y, 10, paint);
         
+        Matrix matrix = getImageViewMatrix();
+        setImageBitmap(bmp, matrix, ZOOM_INVALID, ZOOM_INVALID);        
         return;
 	}
 

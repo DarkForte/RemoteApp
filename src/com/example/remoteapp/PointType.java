@@ -1,5 +1,7 @@
 package com.example.remoteapp;
 
+import android.graphics.Matrix;
+
 
 public class PointType
 {
@@ -53,6 +55,18 @@ public class PointType
 		ret.x+=origin.x;
 		ret.y+=origin.y;
 		
+		return ret;
+	}
+	
+	public PointType transWithMatrix(Matrix matrix)
+	{
+		float tmp[] = new float[2];
+		tmp[0] = (float)x;
+		tmp[1] = (float)y;
+		matrix.mapPoints(tmp);
+		PointType ret = new PointType();
+		ret.x = tmp[0];
+		ret.y = tmp[1];
 		return ret;
 	}
 	

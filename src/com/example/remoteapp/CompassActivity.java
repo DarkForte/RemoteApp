@@ -25,6 +25,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -37,6 +39,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/**
+ * @author Zero
+ *
+ */
 
 public class CompassActivity extends Activity implements SensorEventListener
 {  
@@ -54,10 +60,9 @@ public class CompassActivity extends Activity implements SensorEventListener
 	Button sweepBtn;
 	Button cleanBtn;
 	SensorManager mSensorManager;  
+	GestureDetector gesture_detector;
 	
 	String send_message;
-	//////Sensor
-	private float currentDegree=0f;  
 	float originalDegree = 0;
 	boolean lock=false;
 	int detectTimes=0;
@@ -73,16 +78,18 @@ public class CompassActivity extends Activity implements SensorEventListener
     List<Segment> segments;
     
     PointType MAP_ORIGIN;
-    
-    final double UNKNOWN = -1e4;
-    
+        
     PointType sum_move = new PointType(0,0);
     //double sum_rotate = 0;
     
     //in order to place the picture in a proper place
     
     //double init_rotate = Math.atan(4.0/3.0);
-    PointType picMove = new PointType(-100,0);
+    //PointType picMove = new PointType(-100,0);
+    
+    /**
+     * Network Threads
+     */
     
     class NetThread implements Runnable //get the information from the server
     {
@@ -258,16 +265,16 @@ public class CompassActivity extends Activity implements SensorEventListener
     	
     }
     
+    /**
+     * Functions
+     */
     private void init()
     {
     	the_app = (RemoteApp) getApplicationContext();
     	MAP_ORIGIN = new PointType(the_app.WIDTH/2, the_app.HEIGHT/2);
 	    
 	    imageView=(SuperImageView)findViewById(R.id.picView);  
-	    //text=(TextView)findViewById(R.id.textID);
-	    //now=(TextView)findViewById(R.id.nowID);
 	    cood = (TextView)findViewById(R.id.coodID);
-	   // ori = (TextView)findViewById(R.id.oriID);
 	    
 	    reconnectBtn = (Button)findViewById(R.id.BtnID);
 	    forwardBtn = (Button)findViewById(R.id.forwardID);
@@ -277,17 +284,16 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    sweepBtn = (Button)findViewById(R.id.sweepID);
 	    cleanBtn = (Button)findViewById(R.id.cleanID);
 	    
-	   // calcResult = (TextView)findViewById(R.id.CalcResultID);
 	    mSensorManager=(SensorManager)getSystemService(SENSOR_SERVICE);  
+	    gesture_detector = new GestureDetector(this, new GestureListener());
 	    
 	    segments = new ArrayList<Segment>();
 	    
 	    Bitmap bmp=BitmapFactory.decodeResource(this.getBaseContext().getResources(), 
 	    		R.drawable.pic2048);
-	    imageView.setImageBitmap(bmp);
-	    imageView.setMapOrigin(MAP_ORIGIN);
-	    imageView.setPointList(segments);
 	    
+	    imageView.setImageBitmap(bmp);
+	    imageView.setPointList(segments);
 	    return;
     }
     
@@ -298,7 +304,11 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    requestWindowFeature(Window.FEATURE_NO_TITLE);
 	    setContentView(R.layout.activity_compass);  
 	    
+	    //test
 	    init();
+	    segments.add(new Segment(new PointType(500,500), new PointType(1000,1000)));
+	    imageView.setPointList(segments);
+	    
 	    loginThread = new LoginThread();
 	    new Thread(loginThread).start();
 	    
@@ -324,62 +334,21 @@ public class CompassActivity extends Activity implements SensorEventListener
 					//for(i=0;i<mapPoints.size(); i++)
 					//	System.out.println(mapPoints.get(i));
 					
-					imageView.setPointList(segments);
+					Matrix transform = imageView.getImageViewMatrix();
+					imageView.setPointListWithMatrix(segments, transform);
 					imageView.invalidate();
 				}
 			}
 		};
 	    
-		//Touch
-	    imageView.setOnTouchListener(new OnTouchListener()
-	    {
-			@Override
+		imageView.setOnTouchListener(new OnTouchListener()
+		{
 			public boolean onTouch(View v, MotionEvent e) 
 			{
-				// TODO Auto-generated method stub
-				
-				//raw_point is the point relative to the view
-		        PointType raw_point = new PointType();
-		        raw_point.x=e.getX();
-		        raw_point.y=e.getY();
-		        Log.d("origin_point", "Origin TouchPoint: "+ raw_point);
-		        
-		        
-		        PointType point_on_map = new PointType(raw_point.x, raw_point.y);
-		        
-		        Matrix transform = imageView.getImageViewMatrix();
-		        Log.d("matrix","matrix_origin: "+transform);
-		        Matrix transform_invert = new Matrix();
-		        transform.invert(transform_invert);
-		        Log.d("matrix","matrix_after: "+ transform_invert);
-                
-		        float touch_array[] = new float[2];
-		        touch_array[0] = (float)point_on_map.x;
-		        touch_array[1] = (float)point_on_map.y;
-		        transform_invert.mapPoints(touch_array);
-		        point_on_map.x = touch_array[0];
-		        point_on_map.y = touch_array[1];
-		        
-		        send_message = point_on_map.toString();
-		        SendThread send_thread = new SendThread();
-		        new Thread(send_thread).start();
-		        
-		        cood.setText("X: "+ point_on_map.x +" Y: " + point_on_map.y );
-		        
-		        //draw_point is the point you ask to draw, which is the
-		        //same as raw_point. No need to be changed since the
-		        //Imageview do not change.
-		        draw_point = raw_point;
-		        imageView.setTouchPoint(draw_point);
-		        imageView.invalidate();
-		        
-                
-                
-				return false;
+				return gesture_detector.onTouchEvent(e);
 			}
-	    	
-	    });
-	    
+		});
+		
 	    reconnectBtn.setOnClickListener(new OnClickListener()
 		{
 			@Override
@@ -467,11 +436,61 @@ public class CompassActivity extends Activity implements SensorEventListener
     @Override 
     public void onAccuracyChanged(Sensor arg0, int arg1) 
     {  
-           
-   
     }  
    
-    //ImageView Rotate use
+    class GestureListener extends SimpleOnGestureListener
+    {
+
+		@Override
+		public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) 
+		{
+			// TODO Auto-generated method stub
+			Matrix transform = imageView.getImageMatrix();
+			imageView.setPointListWithMatrix(segments, transform);
+			imageView.invalidate();
+			return super.onScroll(e1, e2, distanceX, distanceY);
+		}
+
+		@Override
+		public boolean onSingleTapUp(MotionEvent e) 
+		{
+			// TODO Auto-generated method stub
+			
+			//raw_point is the point relative to the view
+	        PointType raw_point = new PointType();
+	        raw_point.x=e.getX();
+	        raw_point.y=e.getY();
+	        Log.d("origin_point", "Origin TouchPoint: "+ raw_point);
+	        
+	        //point_on_map is the point with real coodinates (need to be changed)
+	        PointType point_on_map = new PointType(raw_point.x, raw_point.y);
+	        
+	        Matrix transform = imageView.getImageViewMatrix();
+	        Matrix transform_invert = new Matrix();
+	        transform.invert(transform_invert);
+            
+	        point_on_map = point_on_map.transWithMatrix(transform_invert);
+	        
+	        send_message = point_on_map.toString();
+	        SendThread send_thread = new SendThread();
+	        new Thread(send_thread).start();
+	        
+	        cood.setText("X: "+ point_on_map.x +" Y: " + point_on_map.y );
+	        
+	        //draw_point is the point you ask to draw, which is the
+	        //same as raw_point. No need to be changed since the
+	        //Imageview do not change.
+	        draw_point = raw_point;
+	        imageView.setTouchPoint(draw_point);
+	        imageView.invalidate();
+			return super.onSingleTapUp(e);
+		}
+    	
+    }
+    
+    /**
+     * Sensor use
+     */
     @Override 
     public void onSensorChanged(SensorEvent event) 
     {  
@@ -490,8 +509,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 		        	return;
 		        }
 		        imageView.setRotation(originalDegree - degree);
-		        currentDegree=originalDegree-degree;  
-		        break;
+			break;
 		
 	    }  
    		
