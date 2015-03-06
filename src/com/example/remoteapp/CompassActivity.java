@@ -80,6 +80,8 @@ public class CompassActivity extends Activity implements SensorEventListener
     PointType MAP_ORIGIN;
         
     PointType sum_move = new PointType(0,0);
+    
+    Bitmap bmp;
     //double sum_rotate = 0;
     
     //in order to place the picture in a proper place
@@ -233,11 +235,11 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    
 	    segments = new ArrayList<Segment>();
 	    
-	    Bitmap bmp=BitmapFactory.decodeResource(this.getBaseContext().getResources(), 
-	    		R.drawable.pic2048);
+	    bmp=BitmapFactory.decodeResource(this.getBaseContext().getResources(), 
+	    		R.drawable.pic2048).copy(Bitmap.Config.ARGB_8888, true);
 	    
-	    imageView.setImageBitmap(bmp);
-	    imageView.setPointList(segments);
+	    //imageView.setImageBitmap(bmp);
+	    //imageView.setPointList(segments);
 	    return;
     }
     
@@ -252,6 +254,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    init();
 	    segments.add(new Segment(new PointType(500,500), new PointType(1000,1000)));
 	    imageView.setPointList(segments);
+	    imageView.drawMap(bmp);
 	    
 	    loginThread = new LoginThread();
 	    new Thread(loginThread).start();
@@ -272,15 +275,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 				}
 				else if(words.equals("redraw"))
 				{
-					//debug
-					//System.out.println("Will now invalidate!");
-					//int i;
-					//for(i=0;i<mapPoints.size(); i++)
-					//	System.out.println(mapPoints.get(i));
-					
-					Matrix transform = imageView.getImageViewMatrix();
-					imageView.setPointListWithMatrix(segments, transform);
-					imageView.invalidate();
+					imageView.drawMap(bmp);
 				}
 			}
 		};
@@ -384,16 +379,6 @@ public class CompassActivity extends Activity implements SensorEventListener
    
     class GestureListener extends SimpleOnGestureListener
     {
-
-		@Override
-		public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) 
-		{
-			// TODO Auto-generated method stub
-			Matrix transform = imageView.getImageMatrix();
-			imageView.setPointListWithMatrix(segments, transform);
-			imageView.invalidate();
-			return super.onScroll(e1, e2, distanceX, distanceY);
-		}
 
 		@Override
 		public boolean onSingleTapUp(MotionEvent e) 

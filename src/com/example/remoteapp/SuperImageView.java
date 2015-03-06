@@ -85,11 +85,24 @@ public class SuperImageView extends ImageViewTouch
 		// TODO Auto-generated method stub
 		super.onDraw(canvas);
 		
-		Canvas bmp_canvas = new Canvas(bmp);
-		
-        Paint paint = new Paint();
+		Paint paint = new Paint();
         
-        //Draw map
+        //Draw touchPoint
+        paint.setColor(Color.RED);
+        if(finget_point != null)
+        	canvas.drawCircle( (float)finget_point.x, (float)finget_point.y, 10, paint);
+           
+        return;
+	}
+
+	public void drawMap(Bitmap bmp)
+	{
+		Bitmap now_bmp = Bitmap.createBitmap(bmp);
+		Canvas canvas = new Canvas(now_bmp);
+		Paint paint = new Paint();
+		
+		//canvas.drawBitmap(now_bmp, 0, 0, paint);
+		//Draw map
         paint. setColor(Color.BLUE);
         paint. setStrokeWidth(10);
         int i;
@@ -102,19 +115,11 @@ public class SuperImageView extends ImageViewTouch
         	PointType tmp_end = now.e;
         	//tmp_end = tmp_end.centerXYToTopLeftXY(MAP_ORIGIN);
         	
-        	bmp_canvas.drawLine((float)tmp_start.x, (float)tmp_start.y, 
+        	canvas.drawLine((float)tmp_start.x, (float)tmp_start.y, 
         			(float)tmp_end.x, (float)tmp_end.y, paint);
         }
         
-        //Draw touchPoint
-        paint.setColor(Color.RED);
-        if(finget_point != null)
-        	canvas.drawCircle( (float)finget_point.x, (float)finget_point.y, 10, paint);
-        
-        Matrix matrix = getImageViewMatrix();
-        setImageBitmap(bmp, matrix, ZOOM_INVALID, ZOOM_INVALID);        
-        return;
+        Matrix matrix = getDisplayMatrix();
+        setImageBitmap(now_bmp, matrix, ZOOM_INVALID, ZOOM_INVALID);     
 	}
-
-
 }
