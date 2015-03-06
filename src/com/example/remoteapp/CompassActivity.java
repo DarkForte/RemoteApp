@@ -128,7 +128,6 @@ public class CompassActivity extends Activity implements SensorEventListener
 					    		point_data[j] = Double.parseDouble(point_data_string[j]);
 					    	}
 					    	
-					    	
 					    	PointType s = new PointType(point_data[0], point_data[1]);
 					    	PointType e = new PointType(point_data[2], point_data[3]);
 					    	
@@ -136,62 +135,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 					    	
 						}
 						
-						//
-						/*//System.out.println(input);
 						
-						dx = Double.parseDouble(input);
-						input = in.readLine();
-						dy = Double.parseDouble(input);
-						input = in.readLine();
-						rotate = Double.parseDouble(input);
-						
-						//System.out.println("dx: "+dx + " dy: "+dy + " rotate: "+rotate);
-						//Modify start
-
-						int i;
-						
-						PointType move_vec = new PointType(dx, dy);
-						sum_rotate += rotate;
-						move_vec = move_vec.spin(sum_rotate);
-						sum_move.x += move_vec.x;
-						sum_move.y += move_vec.y;
-						
-						//System.out.println("sum_move: "+sum_move);
-						//System.out.println("sum_rotate: "+sum_rotate);
-						//continue to read in
-
-						while(true)
-						{
-							double x,y;
-							input= in.readLine();
-						//	System.out.println("input: "+input);
-							x = Double.parseDouble(input);
-							
-							input= in.readLine();
-						//	System.out.println("input: "+input);
-							y = Double.parseDouble(input);
-							
-						//	System.out.println("x: "+x + " y: "+y);
-
-							if(x<-1e4 && y< -1e4)
-								break;
-
-							PointType new_point = new PointType(x,y);
-							
-							//modify new point
-							new_point = new_point.spin(sum_rotate);
-							new_point.move(sum_move.x, sum_move.y);
-							
-							//in order to place the pic in a proper place
-							new_point = new_point.spin(-init_rotate);
-							new_point.x += picMove.x;
-							new_point.y += picMove.y;
-							
-							mapPoints.add(new_point);
-						}
-						//System.out.println("ans: "+ans);
-
-						imageView.setPointList(mapPoints);*/
 
 						Message msg = new Message();
 						msg.obj = "redraw";
