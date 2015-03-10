@@ -16,7 +16,11 @@ import android.app.Activity;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.PointF;
 import android.hardware.Sensor;  
 import android.hardware.SensorEvent;  
 import android.hardware.SensorEventListener;  
@@ -59,6 +63,10 @@ public class CompassActivity extends Activity implements SensorEventListener
 	Button rightBtn;
 	Button sweepBtn;
 	Button cleanBtn;
+	Button reserveBtn;
+	Button res_okBtn;
+	Button res_cancelBtn;
+	
 	SensorManager mSensorManager;  
 	GestureDetector gesture_detector;
 	
@@ -81,13 +89,19 @@ public class CompassActivity extends Activity implements SensorEventListener
         
     PointType sum_move = new PointType(0,0);
     
-    Bitmap bmp;
+    Bitmap origin_bmp;
     //double sum_rotate = 0;
     
     //in order to place the picture in a proper place
     
     //double init_rotate = Math.atan(4.0/3.0);
     //PointType picMove = new PointType(-100,0);
+    
+    boolean reserve_mode;
+    Bitmap reserve_bmp;
+    Bitmap reserve_nowbmp;
+    
+    List<Button> default_buttons;
     
     /**
      * Network Threads
@@ -136,9 +150,6 @@ public class CompassActivity extends Activity implements SensorEventListener
 					    	segments.add(new Segment(s,e));
 					    	
 						}
-						
-						
-
 						Message msg = new Message();
 						msg.obj = "redraw";
 						CompassActivity.this.handler.sendMessage(msg);
@@ -222,28 +233,62 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    imageView=(SuperImageView)findViewById(R.id.picView);  
 	    cood = (TextView)findViewById(R.id.coodID);
 	    
-	    reconnectBtn = (Button)findViewById(R.id.BtnID);
+	    default_buttons = new ArrayList<Button>();
+	    
 	    forwardBtn = (Button)findViewById(R.id.forwardID);
 	    backwardBtn = (Button)findViewById(R.id.backwardID);
 	    leftBtn = (Button)findViewById(R.id.leftID);
 	    rightBtn = (Button)findViewById(R.id.rightID);
 	    sweepBtn = (Button)findViewById(R.id.sweepID);
 	    cleanBtn = (Button)findViewById(R.id.cleanID);
+	    reconnectBtn = (Button)findViewById(R.id.reconnectID);
+	    reserveBtn = (Button)findViewById(R.id.reserveID);
+	    
+	    default_buttons.add(forwardBtn);
+	    default_buttons.add(backwardBtn);
+	    default_buttons.add(leftBtn);
+	    default_buttons.add(rightBtn);
+	    default_buttons.add(sweepBtn);
+	    default_buttons.add(cleanBtn);
+	    default_buttons.add(reconnectBtn);
+	    default_buttons.add(reserveBtn);
+	    
+	    res_okBtn = (Button)findViewById(R.id.res_okID);
+	    res_cancelBtn = (Button)findViewById(R.id.res_cancelID);
 	    
 	    mSensorManager=(SensorManager)getSystemService(SENSOR_SERVICE);  
 	    gesture_detector = new GestureDetector(this, new GestureListener());
 	    
 	    segments = new ArrayList<Segment>();
 	    
-	    bmp=BitmapFactory.decodeResource(this.getBaseContext().getResources(), 
+	    origin_bmp=BitmapFactory.decodeResource(this.getBaseContext().getResources(), 
 	    		R.drawable.pic2048).copy(Bitmap.Config.ARGB_8888, true);
 	    
-	    //imageView.setImageBitmap(bmp);
-	    //imageView.setPointList(segments);
+	    reserve_mode = false;
+	    reserve_bmp = Bitmap.createBitmap(the_app.WIDTH, the_app.HEIGHT, 
+	    		Bitmap.Config.ARGB_8888);
+	    reserve_nowbmp = Bitmap.createBitmap(reserve_bmp);
 	    return;
     }
     
-	@Override 
+	private void shutReserveMode()
+	{
+		res_okBtn.setVisibility(View.GONE);
+		res_cancelBtn.setVisibility(View.GONE);
+		
+		int i;
+		for(i=0;i<default_buttons.size();i++)
+		{
+			Button now = (Button)default_buttons.get(i);
+			now.setVisibility(View.VISIBLE);
+		}
+		
+		reserve_mode = false;
+		imageView.drawMap(origin_bmp, null);
+		mSensorManager.registerListener(this,mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_GAME);  
+	}
+    
+    @Override 
 	protected void onCreate(Bundle savedInstanceState) 
 	{  
 	    super.onCreate(savedInstanceState);  
@@ -254,7 +299,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    init();
 	    segments.add(new Segment(new PointType(500,500), new PointType(1000,1000)));
 	    imageView.setPointList(segments);
-	    imageView.drawMap(bmp);
+	    imageView.drawMap(origin_bmp, reserve_bmp);
 	    
 	    loginThread = new LoginThread();
 	    new Thread(loginThread).start();
@@ -275,16 +320,47 @@ public class CompassActivity extends Activity implements SensorEventListener
 				}
 				else if(words.equals("redraw"))
 				{
-					imageView.drawMap(bmp);
+					imageView.drawMap(origin_bmp, reserve_bmp);
 				}
 			}
 		};
 	    
 		imageView.setOnTouchListener(new OnTouchListener()
 		{
+		    PointF start_point = new PointF();
+			PointF now_point = new PointF();
 			public boolean onTouch(View v, MotionEvent e) 
 			{
-				return gesture_detector.onTouchEvent(e);
+				if(reserve_mode)
+				{
+					Canvas canvas = new Canvas(reserve_nowbmp);
+					Paint paint = new Paint();
+					paint.setColor(Color.GRAY);
+					paint.setStrokeWidth(20);
+					
+					int action_type = e.getAction();
+					if(action_type == MotionEvent.ACTION_DOWN)
+					{
+						start_point.set(e.getX(), e.getY());
+						Log.d("draw", start_point.toString());
+					}
+					else if(action_type == MotionEvent.ACTION_MOVE)
+					{
+						now_point.set(e.getX(), e.getY());
+						Log.d("draw", "start: "+ start_point.toString());
+						Log.d("draw", "now: "+ now_point.toString());
+						canvas.drawLine(start_point.x, start_point.y, now_point.x, now_point.y, paint);
+						imageView.drawMap(origin_bmp, reserve_nowbmp);
+						start_point.set(now_point.x, now_point.y);
+						
+					}
+					
+					return true;
+				}
+				else
+				{
+					return gesture_detector.onTouchEvent(e);
+				}
 			}
 		});
 		
@@ -298,7 +374,54 @@ public class CompassActivity extends Activity implements SensorEventListener
 			}
 		});
 	    
-	    class BtnListener implements OnClickListener
+	    reserveBtn.setOnClickListener(new OnClickListener()
+	    {
+			@Override
+			public void onClick(View arg0) 
+			{
+				// TODO Auto-generated method stub
+				reserve_mode = true;
+				int i;
+				for(i=0; i<default_buttons.size();i++)
+				{
+					Button now = (Button)default_buttons.get(i);
+					now.setVisibility(View.GONE);
+				}
+				
+				res_okBtn.setVisibility(View.VISIBLE);
+				res_cancelBtn.setVisibility(View.VISIBLE);
+				
+				reserve_nowbmp = Bitmap.createBitmap(reserve_bmp);
+				imageView.drawMap(origin_bmp, reserve_nowbmp);
+				
+				mSensorManager.unregisterListener(CompassActivity.this);
+			}
+	    	
+	    });
+	    
+	    res_okBtn.setOnClickListener(new OnClickListener()
+	    {
+			@Override
+			public void onClick(View arg0) 
+			{
+				// TODO Auto-generated method stub
+				reserve_bmp = Bitmap.createBitmap(reserve_nowbmp);
+				shutReserveMode();
+			}
+	    });
+	    
+	    res_cancelBtn.setOnClickListener(new OnClickListener()
+	    {
+			@Override
+			public void onClick(View arg0) 
+			{
+				// TODO Auto-generated method stub
+				shutReserveMode();
+			}
+	    	
+	    });
+	    
+	    class SendBtnListener implements OnClickListener
 	    {
 
 			@Override
@@ -335,12 +458,12 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    	
 	    }
 	    
-	    forwardBtn.setOnClickListener(new BtnListener());
-	    backwardBtn.setOnClickListener(new BtnListener());
-	    leftBtn.setOnClickListener(new BtnListener());
-	    rightBtn.setOnClickListener(new BtnListener());
-	    sweepBtn.setOnClickListener(new BtnListener());
-	    cleanBtn.setOnClickListener(new BtnListener());
+	    forwardBtn.setOnClickListener(new SendBtnListener());
+	    backwardBtn.setOnClickListener(new SendBtnListener());
+	    leftBtn.setOnClickListener(new SendBtnListener());
+	    rightBtn.setOnClickListener(new SendBtnListener());
+	    sweepBtn.setOnClickListener(new SendBtnListener());
+	    cleanBtn.setOnClickListener(new SendBtnListener());
 	}  
 	
     @Override 
@@ -379,7 +502,6 @@ public class CompassActivity extends Activity implements SensorEventListener
    
     class GestureListener extends SimpleOnGestureListener
     {
-
 		@Override
 		public boolean onSingleTapUp(MotionEvent e) 
 		{
@@ -423,7 +545,7 @@ public class CompassActivity extends Activity implements SensorEventListener
     @Override 
     public void onSensorChanged(SensorEvent event) 
     {  
-	    
+    	
     	int sensortype=event.sensor.getType();  
 	    switch(sensortype)
 	    {  

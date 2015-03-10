@@ -57,7 +57,7 @@ public class SuperImageView extends ImageViewTouch
 		return;
 	}
 	
-	public void setPointListWithMatrix(List<Segment> list, Matrix matrix)
+	/*public void setPointListWithMatrix(List<Segment> list, Matrix matrix)
 	{
 		toDraw = new ArrayList<Segment>();
 		int i;
@@ -71,7 +71,7 @@ public class SuperImageView extends ImageViewTouch
 		}
 		
 		return;
-	}
+	}*/
 	
 	public void setMapOrigin(PointType origin)
 	{
@@ -95,13 +95,12 @@ public class SuperImageView extends ImageViewTouch
         return;
 	}
 
-	public void drawMap(Bitmap bmp)
+	public void drawMap(Bitmap base_bmp, Bitmap draw_bmp)
 	{
-		Bitmap now_bmp = Bitmap.createBitmap(bmp);
+		Bitmap now_bmp = Bitmap.createBitmap(base_bmp);
 		Canvas canvas = new Canvas(now_bmp);
 		Paint paint = new Paint();
 		
-		//canvas.drawBitmap(now_bmp, 0, 0, paint);
 		//Draw map
         paint. setColor(Color.BLUE);
         paint. setStrokeWidth(10);
@@ -118,6 +117,10 @@ public class SuperImageView extends ImageViewTouch
         	canvas.drawLine((float)tmp_start.x, (float)tmp_start.y, 
         			(float)tmp_end.x, (float)tmp_end.y, paint);
         }
+        
+        //Draw draw_bmp
+        if(draw_bmp != null)
+        	canvas.drawBitmap(draw_bmp, 0, 0, paint);
         
         Matrix matrix = getDisplayMatrix();
         setImageBitmap(now_bmp, matrix, ZOOM_INVALID, ZOOM_INVALID);     

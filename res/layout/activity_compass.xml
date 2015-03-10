@@ -17,59 +17,60 @@
 	  
 		<TextView
 		    android:id="@+id/coodID"
-		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:textSize="20sp"
+		    style="@style/Buttons"
 		    android:textColor="#FF000000"
 		    android:text="cood"/>
 		
 		<Button
 		    android:id="@+id/forwardID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
+		    style="@style/Buttons"
 		    android:text="前"/>
 		
 		<Button
 		    android:id="@+id/backwardID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
+		    style="@style/Buttons"
 		    android:text="后"/>
 		
 		<Button
 		    android:id="@+id/leftID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
+		    style="@style/Buttons"
 		    android:text="左"/>
 		
 		<Button
 		    android:id="@+id/rightID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
+		    style="@style/Buttons"
 		    android:text="右"/>
 		
 		<Button
 		    android:id="@+id/sweepID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
+		    style="@style/Buttons"
 		    android:text="清扫"/>
 		
 		<Button
 		    android:id="@+id/cleanID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
+		    style="@style/Buttons"
 		    android:text="净化"/>
 		
 		 <Button
-		    android:id="@+id/BtnID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
-		    android:text="Reconnect"/>
+		    android:id="@+id/reconnectID"
+		    style="@style/Buttons"
+		    android:text="重新连接"/>
+		 
+		 <Button 
+		     android:id="@+id/reserveID"
+		     style="@style/Buttons"
+		     android:text="进入保留区域模式"/>
+		 
+		 <Button 
+		     android:id="@+id/res_okID"
+		     style="@style/Buttons"
+		     android:text="保存"
+		     android:visibility="gone"/>
+		 
+		 <Button
+		     android:id="@+id/res_cancelID"
+		     style="@style/Buttons"
+		     android:text="取消"
+		     android:visibility="gone"/>
 	</LinearLayout>
 </RelativeLayout>
