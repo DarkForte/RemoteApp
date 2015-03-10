@@ -50,7 +50,8 @@ import android.widget.Toast;
 
 public class CompassActivity extends Activity implements SensorEventListener
 {  
-	SuperImageView imageView;  
+	MapImageView imageView;  
+	DrawImageView drawView;
 	TextView text;
 	TextView now;
 	TextView cood;
@@ -74,6 +75,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	float originalDegree = 0;
 	boolean lock=false;
 	int detectTimes=0;
+	float degree=0;
     
     RemoteApp the_app;
     Handler handler;
@@ -98,8 +100,6 @@ public class CompassActivity extends Activity implements SensorEventListener
     //PointType picMove = new PointType(-100,0);
     
     boolean reserve_mode;
-    Bitmap reserve_bmp;
-    Bitmap reserve_nowbmp;
     
     List<Button> default_buttons;
     
@@ -230,7 +230,9 @@ public class CompassActivity extends Activity implements SensorEventListener
     	the_app = (RemoteApp) getApplicationContext();
     	MAP_ORIGIN = new PointType(the_app.WIDTH/2, the_app.HEIGHT/2);
 	    
-	    imageView=(SuperImageView)findViewById(R.id.picView);  
+	    imageView = (MapImageView)findViewById(R.id.picView);  
+	    drawView = (DrawImageView)findViewById(R.id.drawViewID);
+	    drawView.init();
 	    cood = (TextView)findViewById(R.id.coodID);
 	    
 	    default_buttons = new ArrayList<Button>();
@@ -265,14 +267,12 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    		R.drawable.pic2048).copy(Bitmap.Config.ARGB_8888, true);
 	    
 	    reserve_mode = false;
-	    reserve_bmp = Bitmap.createBitmap(the_app.WIDTH, the_app.HEIGHT, 
-	    		Bitmap.Config.ARGB_8888);
-	    reserve_nowbmp = Bitmap.createBitmap(reserve_bmp);
 	    return;
     }
     
 	private void shutReserveMode()
 	{
+		drawView.setVisibility(View.GONE);
 		res_okBtn.setVisibility(View.GONE);
 		res_cancelBtn.setVisibility(View.GONE);
 		
@@ -284,7 +284,6 @@ public class CompassActivity extends Activity implements SensorEventListener
 		}
 		
 		reserve_mode = false;
-		imageView.drawMap(origin_bmp, null);
 		mSensorManager.registerListener(this,mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_GAME);  
 	}
     
@@ -299,7 +298,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    init();
 	    segments.add(new Segment(new PointType(500,500), new PointType(1000,1000)));
 	    imageView.setPointList(segments);
-	    imageView.drawMap(origin_bmp, reserve_bmp);
+	    imageView.drawMap(origin_bmp);
 	    
 	    loginThread = new LoginThread();
 	    new Thread(loginThread).start();
@@ -320,48 +319,20 @@ public class CompassActivity extends Activity implements SensorEventListener
 				}
 				else if(words.equals("redraw"))
 				{
-					imageView.drawMap(origin_bmp, reserve_bmp);
+					imageView.drawMap(origin_bmp);
 				}
 			}
 		};
 	    
 		imageView.setOnTouchListener(new OnTouchListener()
 		{
-		    PointF start_point = new PointF();
-			PointF now_point = new PointF();
-			public boolean onTouch(View v, MotionEvent e) 
+			@Override
+			public boolean onTouch(View arg0, MotionEvent e) 
 			{
-				if(reserve_mode)
-				{
-					Canvas canvas = new Canvas(reserve_nowbmp);
-					Paint paint = new Paint();
-					paint.setColor(Color.GRAY);
-					paint.setStrokeWidth(20);
-					
-					int action_type = e.getAction();
-					if(action_type == MotionEvent.ACTION_DOWN)
-					{
-						start_point.set(e.getX(), e.getY());
-						Log.d("draw", start_point.toString());
-					}
-					else if(action_type == MotionEvent.ACTION_MOVE)
-					{
-						now_point.set(e.getX(), e.getY());
-						Log.d("draw", "start: "+ start_point.toString());
-						Log.d("draw", "now: "+ now_point.toString());
-						canvas.drawLine(start_point.x, start_point.y, now_point.x, now_point.y, paint);
-						imageView.drawMap(origin_bmp, reserve_nowbmp);
-						start_point.set(now_point.x, now_point.y);
-						
-					}
-					
-					return true;
-				}
-				else
-				{
-					return gesture_detector.onTouchEvent(e);
-				}
+				// TODO Auto-generated method stub
+				return gesture_detector.onTouchEvent(e);
 			}
+			
 		});
 		
 	    reconnectBtn.setOnClickListener(new OnClickListener()
@@ -391,8 +362,9 @@ public class CompassActivity extends Activity implements SensorEventListener
 				res_okBtn.setVisibility(View.VISIBLE);
 				res_cancelBtn.setVisibility(View.VISIBLE);
 				
-				reserve_nowbmp = Bitmap.createBitmap(reserve_bmp);
-				imageView.drawMap(origin_bmp, reserve_nowbmp);
+				drawView.loadWithMatrix( imageView.getImageViewMatrix() );
+				drawView.setRotation(originalDegree - degree);
+				drawView.setVisibility(View.VISIBLE);
 				
 				mSensorManager.unregisterListener(CompassActivity.this);
 			}
@@ -405,7 +377,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 			public void onClick(View arg0) 
 			{
 				// TODO Auto-generated method stub
-				reserve_bmp = Bitmap.createBitmap(reserve_nowbmp);
+				drawView.save();
 				shutReserveMode();
 			}
 	    });
@@ -550,7 +522,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    switch(sensortype)
 	    {  
 		    case Sensor.TYPE_ORIENTATION:  
-		        float degree=event.values[0]; 
+		        degree=event.values[0]; 
 		        if(lock==false)
 		        {
 		        	originalDegree = (degree + originalDegree)/2;

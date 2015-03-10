@@ -17,7 +17,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.ImageView;
 
-public class SuperImageView extends ImageViewTouch
+public class MapImageView extends ImageViewTouch
 {
 	Paint paint;
 	Bitmap bmp=BitmapFactory.decodeResource(this.getContext().getResources(), 
@@ -27,19 +27,19 @@ public class SuperImageView extends ImageViewTouch
 	
 	List<Segment> toDraw;
 	
-	public SuperImageView(Context context) 
+	public MapImageView(Context context) 
 	{
 		super(context);
 		// TODO Auto-generated constructor stub
 	}
 
-	public SuperImageView(Context context, AttributeSet attrs, int defStyle) 
+	public MapImageView(Context context, AttributeSet attrs, int defStyle) 
 	{
 		super(context, attrs, defStyle);
 		// TODO Auto-generated constructor stub
 	}
 
-	public SuperImageView(Context context, AttributeSet attrs) 
+	public MapImageView(Context context, AttributeSet attrs) 
 	{
 		super(context, attrs);
 		// TODO Auto-generated constructor stub
@@ -95,7 +95,7 @@ public class SuperImageView extends ImageViewTouch
         return;
 	}
 
-	public void drawMap(Bitmap base_bmp, Bitmap draw_bmp)
+	public void drawMap(Bitmap base_bmp)
 	{
 		Bitmap now_bmp = Bitmap.createBitmap(base_bmp);
 		Canvas canvas = new Canvas(now_bmp);
@@ -117,10 +117,6 @@ public class SuperImageView extends ImageViewTouch
         	canvas.drawLine((float)tmp_start.x, (float)tmp_start.y, 
         			(float)tmp_end.x, (float)tmp_end.y, paint);
         }
-        
-        //Draw draw_bmp
-        if(draw_bmp != null)
-        	canvas.drawBitmap(draw_bmp, 0, 0, paint);
         
         Matrix matrix = getDisplayMatrix();
         setImageBitmap(now_bmp, matrix, ZOOM_INVALID, ZOOM_INVALID);     

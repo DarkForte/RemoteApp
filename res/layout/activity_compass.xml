@@ -1,14 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>  
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android" 
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" 
     android:orientation="vertical" 
     android:layout_width="fill_parent" 
     android:layout_height="fill_parent" 
     android:background="#fff" >  
-	<com.example.remoteapp.SuperImageView 
+    
+	<com.example.remoteapp.MapImageView 
 	    android:id="@+id/picView" 
 	    android:layout_width="fill_parent" 
 	    android:layout_height="fill_parent" 
 	    android:scaleType="matrix" />
+	
+	<com.example.remoteapp.DrawImageView
+        android:id="@+id/drawViewID"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:visibility="gone"
+        android:scaleType="matrix"/>
 	
 	<LinearLayout
 	    android:orientation="vertical"
@@ -73,4 +81,4 @@
 		     android:text="取消"
 		     android:visibility="gone"/>
 	</LinearLayout>
-</RelativeLayout>
+</FrameLayout>
