@@ -103,6 +103,7 @@ public class CompassActivity extends Activity implements SensorEventListener
     
     List<Button> default_buttons;
     
+    ConvexHull convex_hull;
     /**
      * Network Threads
      */
@@ -232,7 +233,6 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    
 	    imageView = (MapImageView)findViewById(R.id.picView);  
 	    drawView = (DrawImageView)findViewById(R.id.drawViewID);
-	    drawView.init();
 	    cood = (TextView)findViewById(R.id.coodID);
 	    
 	    default_buttons = new ArrayList<Button>();
@@ -376,8 +376,20 @@ public class CompassActivity extends Activity implements SensorEventListener
 			@Override
 			public void onClick(View arg0) 
 			{
+				final String LOG_CV = "convex";
 				// TODO Auto-generated method stub
 				drawView.save();
+				
+				///calc convexHull
+				PointType p_array[] = (PointType[])drawView.points.toArray(new PointType[drawView.points.size()]);
+				convex_hull = new ConvexHull(p_array);
+				convex_hull.Graham(p_array.length);
+				
+				Log.d(LOG_CV, "Avoid "+convex_hull.getNum());
+				int i;
+				for(i=0; i<convex_hull.getNum();i++)
+					Log.d(LOG_CV, convex_hull.getPoint(i).toString());
+				
 				shutReserveMode();
 			}
 	    });
@@ -388,6 +400,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 			public void onClick(View arg0) 
 			{
 				// TODO Auto-generated method stub
+				drawView.cancel();
 				shutReserveMode();
 			}
 	    	

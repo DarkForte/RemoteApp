@@ -52,22 +52,27 @@
 		<Button
 		    android:id="@+id/sweepID"
 		    style="@style/Buttons"
-		    android:text="清扫"/>
+		    android:text="开始清扫"/>
 		
 		<Button
 		    android:id="@+id/cleanID"
 		    style="@style/Buttons"
-		    android:text="净化"/>
+		    android:text="开始净化"/>
 		
 		 <Button
 		    android:id="@+id/reconnectID"
 		    style="@style/Buttons"
-		    android:text="重新连接"/>
+		    android:text="重新连接(准备取消)"/>
 		 
 		 <Button 
 		     android:id="@+id/reserveID"
 		     style="@style/Buttons"
 		     android:text="进入保留区域模式"/>
+		 
+		 <Button
+		     android:id="@+id/returnID"
+		     style="@style/Buttons"
+		     android:text="返回基座充电"/>
 		 
 		 <Button 
 		     android:id="@+id/res_okID"

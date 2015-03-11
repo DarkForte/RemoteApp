@@ -110,9 +110,7 @@ public class MapImageView extends ImageViewTouch
         	Segment now = toDraw.get(i);
         	
         	PointType tmp_start = now.s;
-        	//tmp_start = tmp_start.centerXYToTopLeftXY(MAP_ORIGIN);
         	PointType tmp_end = now.e;
-        	//tmp_end = tmp_end.centerXYToTopLeftXY(MAP_ORIGIN);
         	
         	canvas.drawLine((float)tmp_start.x, (float)tmp_start.y, 
         			(float)tmp_end.x, (float)tmp_end.y, paint);
