@@ -5,6 +5,7 @@ import it.sephiroth.android.library.imagezoom.ImageViewTouch;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,13 +20,14 @@ import android.widget.ImageView;
 
 public class MapImageView extends ImageViewTouch
 {
-	Paint paint;
 	Bitmap bmp=BitmapFactory.decodeResource(this.getContext().getResources(), 
 			R.drawable.pic2048).copy(Bitmap.Config.ARGB_8888, true);
 	PointType finget_point;
 	PointType MAP_ORIGIN;
 	
 	List<Segment> toDraw;
+	
+	ValueAnimator animator;
 	
 	public MapImageView(Context context) 
 	{
@@ -79,19 +81,35 @@ public class MapImageView extends ImageViewTouch
 		return;
 	}
 	
+	public void startAnimator()
+	{
+		animator = ValueAnimator.ofInt(255,0);
+		animator.setDuration(500);
+		animator.start();
+		invalidate();
+	}
+	
 	@Override
 	protected void onDraw(Canvas canvas) 
 	{   
 		// TODO Auto-generated method stub
 		super.onDraw(canvas);
-		
-		Paint paint = new Paint();
         
+		Paint paint = new Paint();
         //Draw touchPoint
         paint.setColor(Color.RED);
         if(finget_point != null)
-        	canvas.drawCircle( (float)finget_point.x, (float)finget_point.y, 10, paint);
-           
+        {
+        	if(animator.isRunning())
+            {
+            	int now_alpha = (Integer)animator.getAnimatedValue();
+            	paint.setAlpha(now_alpha);
+            	canvas.drawCircle( (float)finget_point.x, (float)finget_point.y, 10, paint);
+            	invalidate();
+            }
+        }
+        
+        
         return;
 	}
 

@@ -119,4 +119,9 @@ public class DrawImageView extends ImageView
 		now_points.clear();
 	}
 	
+	public void setPoints(List<PointType> p)
+	{
+		points = p;
+	}
+	
 }

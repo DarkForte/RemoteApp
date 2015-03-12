@@ -62,20 +62,22 @@ public class CompassActivity extends Activity implements SensorEventListener
 	Button backwardBtn;
 	Button leftBtn;
 	Button rightBtn;
-	Button sweepBtn;
+	Button clearBtn;
 	Button cleanBtn;
 	Button reserveBtn;
 	Button res_okBtn;
 	Button res_cancelBtn;
+	Button returnBtn;
+	Button reset_mapBtn;
 	
 	SensorManager mSensorManager;  
 	GestureDetector gesture_detector;
 	
 	String send_message;
-	float originalDegree = 0;
-	boolean lock=false;
-	int detectTimes=0;
-	float degree=0;
+	float originalDegree;
+	boolean direction_lock;
+	int detectTimes;
+	float degree;
     
     RemoteApp the_app;
     Handler handler;
@@ -226,6 +228,14 @@ public class CompassActivity extends Activity implements SensorEventListener
     /**
      * Functions
      */
+    private void initSensor()
+    {
+    	originalDegree = 0;
+    	direction_lock=false;
+    	detectTimes=0;
+    	degree=0;
+    }
+    
     private void init()
     {
     	the_app = (RemoteApp) getApplicationContext();
@@ -241,25 +251,30 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    backwardBtn = (Button)findViewById(R.id.backwardID);
 	    leftBtn = (Button)findViewById(R.id.leftID);
 	    rightBtn = (Button)findViewById(R.id.rightID);
-	    sweepBtn = (Button)findViewById(R.id.sweepID);
+	    clearBtn = (Button)findViewById(R.id.clearID);
 	    cleanBtn = (Button)findViewById(R.id.cleanID);
 	    reconnectBtn = (Button)findViewById(R.id.reconnectID);
 	    reserveBtn = (Button)findViewById(R.id.reserveID);
+	    returnBtn = (Button)findViewById(R.id.returnID);
+	    reset_mapBtn = (Button)findViewById(R.id.reset_mapID);
 	    
 	    default_buttons.add(forwardBtn);
 	    default_buttons.add(backwardBtn);
 	    default_buttons.add(leftBtn);
 	    default_buttons.add(rightBtn);
-	    default_buttons.add(sweepBtn);
+	    default_buttons.add(clearBtn);
 	    default_buttons.add(cleanBtn);
 	    default_buttons.add(reconnectBtn);
 	    default_buttons.add(reserveBtn);
+	    default_buttons.add(returnBtn);
+	    default_buttons.add(reset_mapBtn);
 	    
 	    res_okBtn = (Button)findViewById(R.id.res_okID);
 	    res_cancelBtn = (Button)findViewById(R.id.res_cancelID);
 	    
 	    mSensorManager=(SensorManager)getSystemService(SENSOR_SERVICE);  
 	    gesture_detector = new GestureDetector(this, new GestureListener());
+	    initSensor();
 	    
 	    segments = new ArrayList<Segment>();
 	    
@@ -381,7 +396,8 @@ public class CompassActivity extends Activity implements SensorEventListener
 				drawView.save();
 				
 				///calc convexHull
-				PointType p_array[] = (PointType[])drawView.points.toArray(new PointType[drawView.points.size()]);
+				PointType p_array[] = (PointType[])drawView.points.toArray
+						(new PointType[drawView.points.size()]);
 				convex_hull = new ConvexHull(p_array);
 				convex_hull.Graham(p_array.length);
 				
@@ -390,6 +406,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 				for(i=0; i<convex_hull.getNum();i++)
 					Log.d(LOG_CV, convex_hull.getPoint(i).toString());
 				
+				drawView.setPoints(convex_hull.getPointsList());
 				shutReserveMode();
 			}
 	    });
@@ -406,9 +423,23 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    	
 	    });
 	    
+	    reset_mapBtn.setOnClickListener(new OnClickListener()
+	    {
+			@Override
+			public void onClick(View arg0) 
+			{
+				// TODO Auto-generated method stub
+				mSensorManager.unregisterListener(CompassActivity.this);
+				imageView.setRotation(0);
+				initSensor();
+				mSensorManager.registerListener(CompassActivity.this,mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_GAME);  
+			}
+	    	
+	    });
+	    
 	    class SendBtnListener implements OnClickListener
 	    {
-
+	    	boolean cleaning = false, clearing = false;
 			@Override
 			public void onClick(View source) 
 			{
@@ -429,13 +460,39 @@ public class CompassActivity extends Activity implements SensorEventListener
 				{
 					send_message = "Right\n";
 				}
-				else if(source == sweepBtn)
+				else if(source == clearBtn)
 				{
-					send_message = "Start Clean\n";
+					if(clearing == false)
+					{
+						send_message = "Start Clear\n";
+						clearing = true;
+						clearBtn.setText("ÔÝÍ£¿Õ¾»");
+					}
+					else
+					{
+						send_message = "Stop Clear\n";
+						clearing = false;
+						clearBtn.setText("¿ªÊ¼¿Õ¾»");
+					}
 				}
 				else if(source == cleanBtn)
 				{
-					send_message = "Clean";
+					if(cleaning == false)
+					{
+						send_message = "Start Clean\n";
+						cleaning = true;
+						cleanBtn.setText("ÔÝÍ£ÇåÉ¨");
+					}
+					else
+					{
+						send_message = "Pause Clean\n";
+						cleaning = false;
+						cleanBtn.setText("¿ªÊ¼ÇåÉ¨");
+					}
+				}
+				else if(source == returnBtn)
+				{
+					send_message = "Return\n";
 				}
 				SendThread send_thread = new SendThread();
 				new Thread(send_thread).start();
@@ -447,7 +504,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    backwardBtn.setOnClickListener(new SendBtnListener());
 	    leftBtn.setOnClickListener(new SendBtnListener());
 	    rightBtn.setOnClickListener(new SendBtnListener());
-	    sweepBtn.setOnClickListener(new SendBtnListener());
+	    clearBtn.setOnClickListener(new SendBtnListener());
 	    cleanBtn.setOnClickListener(new SendBtnListener());
 	}  
 	
@@ -518,7 +575,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	        //Imageview do not change.
 	        draw_point = raw_point;
 	        imageView.setTouchPoint(draw_point);
-	        imageView.invalidate();
+	        imageView.startAnimator();
 			return super.onSingleTapUp(e);
 		}
     	
@@ -536,12 +593,12 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    {  
 		    case Sensor.TYPE_ORIENTATION:  
 		        degree=event.values[0]; 
-		        if(lock==false)
+		        if(direction_lock==false)
 		        {
 		        	originalDegree = (degree + originalDegree)/2;
 		        	detectTimes++;
 		        	if(detectTimes == 100)
-		        		lock=true;
+		        		direction_lock=true;
 		        	return;
 		        }
 		        imageView.setRotation(originalDegree - degree);

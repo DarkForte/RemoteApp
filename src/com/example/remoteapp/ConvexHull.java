@@ -1,7 +1,9 @@
 package com.example.remoteapp;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 public class ConvexHull
 {
@@ -119,4 +121,14 @@ public class ConvexHull
 		}
 	}
 	
+	public List<PointType> getPointsList()
+	{
+		List<PointType> ret = new ArrayList<PointType>();
+		int i;
+		for(i=0;i<top;i++)
+		{
+			ret.add( new PointType(list[Stack[i]]) );
+		}
+		return ret;
+	}
 }
