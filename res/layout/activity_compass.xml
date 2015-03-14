@@ -59,10 +59,6 @@
 		    style="@style/Buttons"
 		    android:text="开始清扫"/>
 		
-		 <Button
-		    android:id="@+id/reconnectID"
-		    style="@style/Buttons"
-		    android:text="重新连接(准备取消)"/>
 		 
 		 <Button 
 		     android:id="@+id/reserveID"
