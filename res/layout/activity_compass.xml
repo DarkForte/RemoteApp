@@ -1,14 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>  
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android" 
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" 
     android:orientation="vertical" 
     android:layout_width="fill_parent" 
     android:layout_height="fill_parent" 
     android:background="#fff" >  
-	<com.example.remoteapp.SuperImageView 
+    
+	<com.example.remoteapp.MapImageView 
 	    android:id="@+id/picView" 
 	    android:layout_width="fill_parent" 
 	    android:layout_height="fill_parent" 
 	    android:scaleType="matrix" />
+	
+	<com.example.remoteapp.DrawImageView
+        android:id="@+id/drawViewID"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:visibility="gone"
+        android:scaleType="matrix"/>
 	
 	<LinearLayout
 	    android:orientation="vertical"
@@ -17,59 +25,66 @@
 	  
 		<TextView
 		    android:id="@+id/coodID"
-		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:textSize="20sp"
+		    style="@style/Buttons"
 		    android:textColor="#FF000000"
 		    android:text="cood"/>
 		
 		<Button
 		    android:id="@+id/forwardID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
+		    style="@style/Buttons"
 		    android:text="前"/>
 		
 		<Button
 		    android:id="@+id/backwardID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
+		    style="@style/Buttons"
 		    android:text="后"/>
 		
 		<Button
 		    android:id="@+id/leftID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
+		    style="@style/Buttons"
 		    android:text="左"/>
 		
 		<Button
 		    android:id="@+id/rightID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
+		    style="@style/Buttons"
 		    android:text="右"/>
 		
 		<Button
-		    android:id="@+id/sweepID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
-		    android:text="清扫"/>
+		    android:id="@+id/clearID"
+		    style="@style/Buttons"
+		    android:text="开始空净"/>
 		
 		<Button
 		    android:id="@+id/cleanID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
-		    android:text="净化"/>
+		    style="@style/Buttons"
+		    android:text="开始清扫"/>
 		
+		 
+		 <Button 
+		     android:id="@+id/reserveID"
+		     style="@style/Buttons"
+		     android:text="进入保留区域模式"/>
+		 
 		 <Button
-		    android:id="@+id/BtnID"
-		    android:layout_height="wrap_content"
-		    android:layout_width="wrap_content" 
-		    android:textSize="30sp"
-		    android:text="Reconnect"/>
+		     android:id="@+id/returnID"
+		     style="@style/Buttons"
+		     android:text="返回基座充电"/>
+		 <Button
+		     android:id="@+id/reset_mapID"
+		     style="@style/Buttons"
+		     android:text="重设地图旋转方向"/>
+		 
+		 <Button 
+		     android:id="@+id/res_okID"
+		     style="@style/Buttons"
+		     android:text="保存"
+		     android:visibility="gone"/>
+		 
+		 <Button
+		     android:id="@+id/res_cancelID"
+		     style="@style/Buttons"
+		     android:text="取消"
+		     android:visibility="gone"/>
+		 
 	</LinearLayout>
-</RelativeLayout>
+</FrameLayout>

@@ -2,7 +2,6 @@ package com.example.remoteapp;
 
 import android.graphics.Matrix;
 
-
 public class PointType
 {
 	//Android screen axis: ¡úx ¡ýy 
@@ -18,6 +17,17 @@ public class PointType
 	{
 		x=0;
 		y=0;
+	}
+	public PointType(PointType b)
+	{
+		x=b.x;
+		y=b.y;
+	}
+	
+	public void set(double x, double y)
+	{
+		this.x=x;
+		this.y=y;
 	}
 	
 	public PointType spin(double little_a) // spin need to be written like p=p.spin(d)
@@ -73,6 +83,26 @@ public class PointType
 	public String toString()
 	{
 		return x+" "+y;
+	}
+	
+	public PointType add(PointType b)
+	{
+		return new PointType(x+b.x, y+b.y);
+	}
+	
+	public PointType sub(PointType b)
+	{
+		return new PointType(x-b.x, y-b.y);
+	}
+	
+	public double cross(PointType b)
+	{
+		return (x*b.y - y*b.x);
+	}
+	
+	public double dist(PointType b)
+	{
+		return Math.sqrt( (x-b.x) * (x-b.x) + (y-b.y) * (y-b.y) );
 	}
 }
 

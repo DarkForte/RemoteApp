@@ -12,11 +12,17 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zero.clientsocketmanager.ClientSocketManager;
+
 import android.app.Activity;  
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.PointF;
 import android.hardware.Sensor;  
 import android.hardware.SensorEvent;  
 import android.hardware.SensorEventListener;  
@@ -46,7 +52,8 @@ import android.widget.Toast;
 
 public class CompassActivity extends Activity implements SensorEventListener
 {  
-	SuperImageView imageView;  
+	MapImageView imageView;  
+	DrawImageView drawView;
 	TextView text;
 	TextView now;
 	TextView cood;
@@ -57,21 +64,26 @@ public class CompassActivity extends Activity implements SensorEventListener
 	Button backwardBtn;
 	Button leftBtn;
 	Button rightBtn;
-	Button sweepBtn;
+	Button clearBtn;
 	Button cleanBtn;
+	Button reserveBtn;
+	Button res_okBtn;
+	Button res_cancelBtn;
+	Button returnBtn;
+	Button reset_mapBtn;
+	
 	SensorManager mSensorManager;  
 	GestureDetector gesture_detector;
 	
 	String send_message;
-	float originalDegree = 0;
-	boolean lock=false;
-	int detectTimes=0;
+	float originalDegree;
+	boolean direction_lock;
+	int detectTimes;
+	float degree;
     
     RemoteApp the_app;
     Handler handler;
-    
-    LoginThread loginThread;
-    NetThread netThread;
+    ClientSocketManager socket_manager;
     
     PointType draw_point;
     //List<PointType> mapPoints;
@@ -81,7 +93,7 @@ public class CompassActivity extends Activity implements SensorEventListener
         
     PointType sum_move = new PointType(0,0);
     
-    Bitmap bmp;
+    Bitmap origin_bmp;
     //double sum_rotate = 0;
     
     //in order to place the picture in a proper place
@@ -89,24 +101,28 @@ public class CompassActivity extends Activity implements SensorEventListener
     //double init_rotate = Math.atan(4.0/3.0);
     //PointType picMove = new PointType(-100,0);
     
+    boolean reserve_mode;
+    
+    List<Button> default_buttons;
+    
+    ConvexHull convex_hull;
+    
     /**
      * Network Threads
      */
     
-    class NetThread implements Runnable //get the information from the server
+    class GetThread implements Runnable //get the information from the server
     {
-    	//double dx, dy, rotate;
 		@Override
 		public void run() 
 		{
 			try 
 			{
-				BufferedReader in = new BufferedReader(new InputStreamReader(the_app.socket.getInputStream()));
+				BufferedReader in = new BufferedReader
+						(new InputStreamReader(socket_manager.getSocket().getInputStream()));
 				while(true)
 				{
 					String input = in.readLine();
-					//System.out.println("1: "+input);
-
 					if(input != null)
 					{
 				    	int n; 
@@ -120,7 +136,6 @@ public class CompassActivity extends Activity implements SensorEventListener
 						{
 					    	double point_data[] = new double[10];
 					    	input = in.readLine();
-					    	//System.out.println("2: "+input);
 					    	
 					    	String point_data_string[] = new String[10];
 					    	point_data_string = input.split(" ");
@@ -136,9 +151,6 @@ public class CompassActivity extends Activity implements SensorEventListener
 					    	segments.add(new Segment(s,e));
 					    	
 						}
-						
-						
-
 						Message msg = new Message();
 						msg.obj = "redraw";
 						CompassActivity.this.handler.sendMessage(msg);
@@ -151,6 +163,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 				Message msg = new Message();
 				msg.obj = "net error";
 				CompassActivity.this.handler.sendMessage(msg);
+				return;
 			}
 			catch (NullPointerException e)
 			{
@@ -158,92 +171,122 @@ public class CompassActivity extends Activity implements SensorEventListener
 				Message msg = new Message();
 				msg.obj = "net error";
 				CompassActivity.this.handler.sendMessage(msg);
+				return;
 			}
 		}
     }
 
-    class LoginThread implements Runnable
-	{
-		@Override
-		public void run() 
-		{
-			try 
-			{
-				//System.out.println(the_app.ip + " " + the_app.port);
-				the_app.socket = new Socket();
-				the_app.socket.connect(new InetSocketAddress(the_app.ip, the_app.port) , 5000);
-				
-				//open a netthread after logged in
-				NetThread getThread = new NetThread();
-				new Thread(getThread).start();
-				
-			} catch (UnknownHostException e) 
-			{
-				System.out.println("UnknownHostException");
-				Message msg = new Message();
-				msg.obj = "did not login";
-				CompassActivity.this.handler.sendMessage(msg);
-			} catch (IOException e) {
-				System.out.println("IOException");
-				Message msg = new Message();
-				msg.obj = "did not login";
-				CompassActivity.this.handler.sendMessage(msg);
-			}
-		}
-	}
-    
-    class SendThread implements Runnable
+    class MonitorThread implements Runnable
     {
+    	boolean logged_in = false;
 		@Override
 		public void run() 
 		{
-			PrintWriter cout;
-			try 
+			// TODO Auto-generated method stub
+			while(logged_in == false)
 			{
-				cout = new PrintWriter(the_app.socket.getOutputStream(),true);
-				cout.println(send_message);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logged_in = socket_manager.loginBlocked();
+				if(logged_in==false)
+				{
+					try 
+					{
+						Thread.sleep(5000);
+					} catch (InterruptedException e) 
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
 			}
-			
+			new Thread(new GetThread()).start();
 		}
-    	
     }
     
     /**
      * Functions
      */
+    private void initSensor()
+    {
+    	originalDegree = 0;
+    	direction_lock=false;
+    	detectTimes=0;
+    	degree=0;
+    }
+    
     private void init()
     {
     	the_app = (RemoteApp) getApplicationContext();
     	MAP_ORIGIN = new PointType(the_app.WIDTH/2, the_app.HEIGHT/2);
 	    
-	    imageView=(SuperImageView)findViewById(R.id.picView);  
+	    imageView = (MapImageView)findViewById(R.id.picView);  
+	    drawView = (DrawImageView)findViewById(R.id.drawViewID);
 	    cood = (TextView)findViewById(R.id.coodID);
 	    
-	    reconnectBtn = (Button)findViewById(R.id.BtnID);
+	    default_buttons = new ArrayList<Button>();
+	    
 	    forwardBtn = (Button)findViewById(R.id.forwardID);
 	    backwardBtn = (Button)findViewById(R.id.backwardID);
 	    leftBtn = (Button)findViewById(R.id.leftID);
 	    rightBtn = (Button)findViewById(R.id.rightID);
-	    sweepBtn = (Button)findViewById(R.id.sweepID);
+	    clearBtn = (Button)findViewById(R.id.clearID);
 	    cleanBtn = (Button)findViewById(R.id.cleanID);
+	    reserveBtn = (Button)findViewById(R.id.reserveID);
+	    returnBtn = (Button)findViewById(R.id.returnID);
+	    reset_mapBtn = (Button)findViewById(R.id.reset_mapID);
+	    
+	    default_buttons.add(forwardBtn);
+	    default_buttons.add(backwardBtn);
+	    default_buttons.add(leftBtn);
+	    default_buttons.add(rightBtn);
+	    default_buttons.add(clearBtn);
+	    default_buttons.add(cleanBtn);
+	    default_buttons.add(reconnectBtn);
+	    default_buttons.add(reserveBtn);
+	    default_buttons.add(returnBtn);
+	    default_buttons.add(reset_mapBtn);
+	    
+	    res_okBtn = (Button)findViewById(R.id.res_okID);
+	    res_cancelBtn = (Button)findViewById(R.id.res_cancelID);
 	    
 	    mSensorManager=(SensorManager)getSystemService(SENSOR_SERVICE);  
 	    gesture_detector = new GestureDetector(this, new GestureListener());
+	    initSensor();
 	    
 	    segments = new ArrayList<Segment>();
 	    
-	    bmp=BitmapFactory.decodeResource(this.getBaseContext().getResources(), 
+	    origin_bmp=BitmapFactory.decodeResource(this.getBaseContext().getResources(), 
 	    		R.drawable.pic2048).copy(Bitmap.Config.ARGB_8888, true);
+	    imageView.setPointList(segments);
+	    imageView.drawMap(origin_bmp);
 	    
-	    //imageView.setImageBitmap(bmp);
-	    //imageView.setPointList(segments);
+	    reserve_mode = false;
 	    return;
     }
     
-	@Override 
+	private void shutReserveMode()
+	{
+		drawView.setVisibility(View.GONE);
+		res_okBtn.setVisibility(View.GONE);
+		res_cancelBtn.setVisibility(View.GONE);
+		
+		int i;
+		for(i=0;i<default_buttons.size();i++)
+		{
+			Button now = (Button)default_buttons.get(i);
+			now.setVisibility(View.VISIBLE);
+		}
+		
+		reserve_mode = false;
+		mSensorManager.registerListener(this,mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_GAME);  
+	}
+
+	private void startMonitorThread()
+	{
+		MonitorThread mt = new MonitorThread();
+		new Thread(mt).start();
+	}
+	
+    @Override 
 	protected void onCreate(Bundle savedInstanceState) 
 	{  
 	    super.onCreate(savedInstanceState);  
@@ -252,55 +295,133 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    
 	    //test
 	    init();
-	    segments.add(new Segment(new PointType(500,500), new PointType(1000,1000)));
+	    /*segments.add(new Segment(new PointType(500,500), new PointType(1000,1000)));
 	    imageView.setPointList(segments);
-	    imageView.drawMap(bmp);
-	    
-	    loginThread = new LoginThread();
-	    new Thread(loginThread).start();
+	    imageView.drawMap(origin_bmp);*/
 	    
 	    handler = new Handler()
 		{
 			public void handleMessage(Message msg)
 			{
 				String words = (String)msg.obj;
-				if( words.equals("ok") == true )
+				if( words.equals("ok") )
 				{
 					Toast.makeText(CompassActivity.this, "来自服务器的问候：登陆成功！！欢迎使用~",Toast.LENGTH_LONG).show();
-					finish();
 				}
 				else if(words.equals("did not login") )
 				{
 					Toast.makeText(CompassActivity.this,"ip错了或者是主机没有开", Toast.LENGTH_SHORT).show();
 				}
+				else if(words.equals("net error"))
+				{
+					Toast.makeText(CompassActivity.this,"网络连接断了", Toast.LENGTH_SHORT).show();
+					startMonitorThread();
+				}
 				else if(words.equals("redraw"))
 				{
-					imageView.drawMap(bmp);
+					imageView.setPointList(segments);
+					imageView.drawMap(origin_bmp);
 				}
 			}
 		};
+		
+		socket_manager = new ClientSocketManager(the_app.ip, the_app.port, handler);
+		startMonitorThread();
 	    
 		imageView.setOnTouchListener(new OnTouchListener()
 		{
-			public boolean onTouch(View v, MotionEvent e) 
+			@Override
+			public boolean onTouch(View arg0, MotionEvent e) 
 			{
+				// TODO Auto-generated method stub
 				return gesture_detector.onTouchEvent(e);
 			}
+			
 		});
 		
-	    reconnectBtn.setOnClickListener(new OnClickListener()
-		{
+	    reserveBtn.setOnClickListener(new OnClickListener()
+	    {
 			@Override
 			public void onClick(View arg0) 
 			{
-				LoginThread login_thread = new LoginThread();
-				new Thread(login_thread).start();
+				// TODO Auto-generated method stub
+				reserve_mode = true;
+				int i;
+				for(i=0; i<default_buttons.size();i++)
+				{
+					Button now = (Button)default_buttons.get(i);
+					now.setVisibility(View.GONE);
+				}
+				
+				res_okBtn.setVisibility(View.VISIBLE);
+				res_cancelBtn.setVisibility(View.VISIBLE);
+				
+				drawView.loadWithMatrix( imageView.getImageViewMatrix() );
+				drawView.setRotation(originalDegree - degree);
+				drawView.setVisibility(View.VISIBLE);
+				
+				mSensorManager.unregisterListener(CompassActivity.this);
 			}
-		});
+	    	
+	    });
 	    
-	    class BtnListener implements OnClickListener
+	    res_okBtn.setOnClickListener(new OnClickListener()
 	    {
-
+			@Override
+			public void onClick(View arg0) 
+			{
+				final String LOG_CV = "convex";
+				// TODO Auto-generated method stub
+				drawView.save();
+				
+				///calc convexHull
+				PointType p_array[] = (PointType[])drawView.points.toArray
+						(new PointType[drawView.points.size()]);
+				convex_hull = new ConvexHull(p_array);
+				convex_hull.Graham(p_array.length);
+				
+				//Log.d(LOG_CV, "Avoid "+convex_hull.getNum());
+				socket_manager.sendMessage("Avoid "+convex_hull.getNum()+"\n");
+				int i;
+				for(i=0; i<convex_hull.getNum();i++)
+				{
+					//Log.d(LOG_CV, convex_hull.getPoint(i).toString());
+					socket_manager.sendMessage(convex_hull.getPoint(i).toString()+"\n");
+				}
+				drawView.setPoints(convex_hull.getPointsList());
+				shutReserveMode();
+			}
+	    });
+	    
+	    res_cancelBtn.setOnClickListener(new OnClickListener()
+	    {
+			@Override
+			public void onClick(View arg0) 
+			{
+				// TODO Auto-generated method stub
+				drawView.cancel();
+				shutReserveMode();
+			}
+	    	
+	    });
+	    
+	    reset_mapBtn.setOnClickListener(new OnClickListener()
+	    {
+			@Override
+			public void onClick(View arg0) 
+			{
+				// TODO Auto-generated method stub
+				mSensorManager.unregisterListener(CompassActivity.this);
+				imageView.setRotation(0);
+				initSensor();
+				mSensorManager.registerListener(CompassActivity.this,mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_GAME);  
+			}
+	    	
+	    });
+	    
+	    class SendBtnListener implements OnClickListener
+	    {
+	    	boolean cleaning = false, clearing = false;
 			@Override
 			public void onClick(View source) 
 			{
@@ -321,26 +442,51 @@ public class CompassActivity extends Activity implements SensorEventListener
 				{
 					send_message = "Right\n";
 				}
-				else if(source == sweepBtn)
+				else if(source == clearBtn)
 				{
-					send_message = "Start Clean\n";
+					if(clearing == false)
+					{
+						send_message = "Start Clear\n";
+						clearing = true;
+						clearBtn.setText("暂停空净");
+					}
+					else
+					{
+						send_message = "Stop Clear\n";
+						clearing = false;
+						clearBtn.setText("开始空净");
+					}
 				}
 				else if(source == cleanBtn)
 				{
-					send_message = "Clean";
+					if(cleaning == false)
+					{
+						send_message = "Start Clean\n";
+						cleaning = true;
+						cleanBtn.setText("暂停清扫");
+					}
+					else
+					{
+						send_message = "Pause Clean\n";
+						cleaning = false;
+						cleanBtn.setText("开始清扫");
+					}
 				}
-				SendThread send_thread = new SendThread();
-				new Thread(send_thread).start();
+				else if(source == returnBtn)
+				{
+					send_message = "Return\n";
+				}
+				socket_manager.sendMessage(send_message);
 			}
 	    	
 	    }
 	    
-	    forwardBtn.setOnClickListener(new BtnListener());
-	    backwardBtn.setOnClickListener(new BtnListener());
-	    leftBtn.setOnClickListener(new BtnListener());
-	    rightBtn.setOnClickListener(new BtnListener());
-	    sweepBtn.setOnClickListener(new BtnListener());
-	    cleanBtn.setOnClickListener(new BtnListener());
+	    forwardBtn.setOnClickListener(new SendBtnListener());
+	    backwardBtn.setOnClickListener(new SendBtnListener());
+	    leftBtn.setOnClickListener(new SendBtnListener());
+	    rightBtn.setOnClickListener(new SendBtnListener());
+	    clearBtn.setOnClickListener(new SendBtnListener());
+	    cleanBtn.setOnClickListener(new SendBtnListener());
 	}  
 	
     @Override 
@@ -366,9 +512,7 @@ public class CompassActivity extends Activity implements SensorEventListener
     
     protected void onDestroy()
     {
-    	send_message = "Exit\n";
-    	SendThread send_thread = new SendThread();
-    	new Thread(send_thread).start();
+    	socket_manager.sendMessage("Exit\n");
     	super.onDestroy();
     }
    
@@ -379,7 +523,6 @@ public class CompassActivity extends Activity implements SensorEventListener
    
     class GestureListener extends SimpleOnGestureListener
     {
-
 		@Override
 		public boolean onSingleTapUp(MotionEvent e) 
 		{
@@ -400,9 +543,7 @@ public class CompassActivity extends Activity implements SensorEventListener
             
 	        point_on_map = point_on_map.transWithMatrix(transform_invert);
 	        
-	        send_message = point_on_map.toString();
-	        SendThread send_thread = new SendThread();
-	        new Thread(send_thread).start();
+	        socket_manager.sendMessage("Target "+ point_on_map.toString() + "\n");
 	        
 	        cood.setText("X: "+ point_on_map.x +" Y: " + point_on_map.y );
 	        
@@ -411,7 +552,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	        //Imageview do not change.
 	        draw_point = raw_point;
 	        imageView.setTouchPoint(draw_point);
-	        imageView.invalidate();
+	        imageView.startAnimator();
 			return super.onSingleTapUp(e);
 		}
     	
@@ -423,18 +564,18 @@ public class CompassActivity extends Activity implements SensorEventListener
     @Override 
     public void onSensorChanged(SensorEvent event) 
     {  
-	    
+    	
     	int sensortype=event.sensor.getType();  
 	    switch(sensortype)
 	    {  
 		    case Sensor.TYPE_ORIENTATION:  
-		        float degree=event.values[0]; 
-		        if(lock==false)
+		        degree=event.values[0]; 
+		        if(direction_lock==false)
 		        {
 		        	originalDegree = (degree + originalDegree)/2;
 		        	detectTimes++;
 		        	if(detectTimes == 100)
-		        		lock=true;
+		        		direction_lock=true;
 		        	return;
 		        }
 		        imageView.setRotation(originalDegree - degree);

@@ -64,26 +64,22 @@ static void *calc(void *dat)
 	
 	cout<<"calcthread entered!"<<endl;
 	int n=0;
-	int x=0;
-	int y=0;
-	int dx = 30;
-	int dy = 40;
+	int x=500;
+	int y=500;
+	int l=100;
+	int dn=10;
 	while(true)
 	{
 		n++;
 		LOCK(output_lock);
 		
-		output_q.push(n);
-		int i,j;
-		for(i=1; i<=n; i++)
-		{
-			output_q.push(x);
-			output_q.push(y);
-			output_q.push(x+dx);
-			output_q.push(y+dy);
-			x+=50;
-			y+=0;
-		}
+		output_q.push(1);
+		output_q.push(x);
+		output_q.push(y);
+		output_q.push(x+l);
+		output_q.push(y+l);
+		x+=dn;
+		n++;
 		
 		UNLOCK(output_lock);
 		sleep(2);
