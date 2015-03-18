@@ -59,7 +59,6 @@ public class CompassActivity extends Activity implements SensorEventListener
 	TextView cood;
 	TextView ori;
 	TextView calcResult;
-	Button reconnectBtn;
 	Button forwardBtn;
 	Button backwardBtn;
 	Button leftBtn;
@@ -240,7 +239,6 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    default_buttons.add(rightBtn);
 	    default_buttons.add(clearBtn);
 	    default_buttons.add(cleanBtn);
-	    default_buttons.add(reconnectBtn);
 	    default_buttons.add(reserveBtn);
 	    default_buttons.add(returnBtn);
 	    default_buttons.add(reset_mapBtn);
