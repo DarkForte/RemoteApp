@@ -22,12 +22,12 @@
 	    android:orientation="vertical"
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content">"
-	  
-		<TextView
-		    android:id="@+id/coodID"
-		    style="@style/Buttons"
-		    android:textColor="#FF000000"
-		    android:text="cood"/>
+		
+		<!-- <TextView
+		android:id="@+id/coodID"
+		style="@style/Buttons"
+		android:textColor="#FF000000"
+		android:text="cood"/> -->
 		
 		<Button
 		    android:id="@+id/forwardID"
@@ -85,6 +85,21 @@
 		     style="@style/Buttons"
 		     android:text="取消"
 		     android:visibility="gone"/>
+		 
+		 <Button 
+		     android:id="@+id/timeBtn"
+		     style="@style/Buttons"
+		     android:text="定时"/>
+		   
+		 <Button 
+		     android:id="@+id/showinfoBtn"
+		     style="@style/Buttons"
+		     android:text="显示运行信息"/>
+		 
+		 <Button
+		     android:id="@+id/aboutBtn"
+		     style="@style/Buttons"
+		     android:text="关于"/>"
 		 
 	</LinearLayout>
 </FrameLayout>

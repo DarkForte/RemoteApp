@@ -70,6 +70,9 @@ public class CompassActivity extends Activity implements SensorEventListener
 	Button res_cancelBtn;
 	Button returnBtn;
 	Button reset_mapBtn;
+	Button timeBtn;
+	Button show_infoBtn;
+	Button aboutBtn;
 	
 	SensorManager mSensorManager;  
 	GestureDetector gesture_detector;
@@ -219,7 +222,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    
 	    imageView = (MapImageView)findViewById(R.id.picView);  
 	    drawView = (DrawImageView)findViewById(R.id.drawViewID);
-	    cood = (TextView)findViewById(R.id.coodID);
+	    //cood = (TextView)findViewById(R.id.coodID);
 	    
 	    default_buttons = new ArrayList<Button>();
 	    
@@ -232,6 +235,9 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    reserveBtn = (Button)findViewById(R.id.reserveID);
 	    returnBtn = (Button)findViewById(R.id.returnID);
 	    reset_mapBtn = (Button)findViewById(R.id.reset_mapID);
+	    timeBtn = (Button)findViewById(R.id.timeBtn);
+	    show_infoBtn = (Button)findViewById(R.id.showinfoBtn);
+	    aboutBtn = (Button)findViewById(R.id.aboutBtn);
 	    
 	    default_buttons.add(forwardBtn);
 	    default_buttons.add(backwardBtn);
@@ -242,6 +248,9 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    default_buttons.add(reserveBtn);
 	    default_buttons.add(returnBtn);
 	    default_buttons.add(reset_mapBtn);
+	    default_buttons.add(timeBtn);
+	    default_buttons.add(show_infoBtn);
+	    default_buttons.add(aboutBtn);
 	    
 	    res_okBtn = (Button)findViewById(R.id.res_okID);
 	    res_cancelBtn = (Button)findViewById(R.id.res_cancelID);
@@ -291,11 +300,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    requestWindowFeature(Window.FEATURE_NO_TITLE);
 	    setContentView(R.layout.activity_compass);  
 	    
-	    //test
 	    init();
-	    /*segments.add(new Segment(new PointType(500,500), new PointType(1000,1000)));
-	    imageView.setPointList(segments);
-	    imageView.drawMap(origin_bmp);*/
 	    
 	    handler = new Handler()
 		{
@@ -485,6 +490,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    rightBtn.setOnClickListener(new SendBtnListener());
 	    clearBtn.setOnClickListener(new SendBtnListener());
 	    cleanBtn.setOnClickListener(new SendBtnListener());
+	    returnBtn.setOnClickListener(new SendBtnListener());
 	}  
 	
     @Override 
@@ -543,7 +549,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	        
 	        socket_manager.sendMessage("Target "+ point_on_map.toString() + "\n");
 	        
-	        cood.setText("X: "+ point_on_map.x +" Y: " + point_on_map.y );
+	       // cood.setText("X: "+ point_on_map.x +" Y: " + point_on_map.y );
 	        
 	        //draw_point is the point you ask to draw, which is the
 	        //same as raw_point. No need to be changed since the
