@@ -97,9 +97,9 @@
 		     android:text="显示运行信息"/>
 		 
 		 <Button
-		     android:id="@+id/aboutBtn"
+		     android:id="@+id/resetBtn"
 		     style="@style/Buttons"
-		     android:text="关于"/>"
+		     android:text="重置"/>"
 		 
 	</LinearLayout>
 </FrameLayout>

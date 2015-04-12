@@ -72,7 +72,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	Button reset_mapBtn;
 	Button timeBtn;
 	Button show_infoBtn;
-	Button aboutBtn;
+	Button resetBtn;
 	
 	SensorManager mSensorManager;  
 	GestureDetector gesture_detector;
@@ -88,20 +88,14 @@ public class CompassActivity extends Activity implements SensorEventListener
     ClientSocketManager socket_manager;
     
     PointType draw_point;
-    //List<PointType> mapPoints;
     List<Segment> segments;
+    PointType car_point;
     
     PointType MAP_ORIGIN;
         
     PointType sum_move = new PointType(0,0);
     
     Bitmap origin_bmp;
-    //double sum_rotate = 0;
-    
-    //in order to place the picture in a proper place
-    
-    //double init_rotate = Math.atan(4.0/3.0);
-    //PointType picMove = new PointType(-100,0);
     
     boolean reserve_mode;
     
@@ -127,31 +121,42 @@ public class CompassActivity extends Activity implements SensorEventListener
 					String input = in.readLine();
 					if(input != null)
 					{
-				    	int n; 
-						input = input.substring(4);
-						n = Integer.parseInt(input);
-						
-						segments.clear();
-						
-						int i;
-						for(i=1; i<=n; i++)
+						if(input.startsWith("Map"))
 						{
-					    	double point_data[] = new double[10];
-					    	input = in.readLine();
-					    	
-					    	String point_data_string[] = new String[10];
-					    	point_data_string = input.split(" ");
-					    	int j;
-					    	for(j=0; j<=4;j++)
-					    	{
-					    		point_data[j] = Double.parseDouble(point_data_string[j]);
-					    	}
-					    	
-					    	PointType s = new PointType(point_data[0], point_data[1]);
-					    	PointType e = new PointType(point_data[2], point_data[3]);
-					    	
-					    	segments.add(new Segment(s,e));
-					    	
+							int n; 
+							input = input.substring(4);
+							n = Integer.parseInt(input);
+							
+							segments.clear();
+							
+							int i;
+							for(i=1; i<=n; i++)
+							{
+						    	double point_data[] = new double[10];
+						    	input = in.readLine();
+						    	
+						    	String point_data_string[] = new String[10];
+						    	point_data_string = input.split(" ");
+						    	int j;
+						    	for(j=0; j<=4;j++)
+						    	{
+						    		point_data[j] = Double.parseDouble(point_data_string[j]);
+						    	}
+						    	
+						    	PointType s = new PointType(point_data[0], point_data[1]);
+						    	PointType e = new PointType(point_data[2], point_data[3]);
+						    	
+						    	segments.add(new Segment(s,e));
+						    	
+							}
+						}
+						else if(input.startsWith("Self"))
+						{
+							String input_string[] = new String[10];
+							input_string = input.split(" ");
+							double x = Double.parseDouble(input_string[1]);
+							double y = Double.parseDouble(input_string[2]);
+							car_point = new PointType(x,y);
 						}
 						Message msg = new Message();
 						msg.obj = "redraw";
@@ -220,7 +225,8 @@ public class CompassActivity extends Activity implements SensorEventListener
     	the_app = (RemoteApp) getApplicationContext();
     	MAP_ORIGIN = new PointType(the_app.WIDTH/2, the_app.HEIGHT/2);
 	    
-	    imageView = (MapImageView)findViewById(R.id.picView);  
+	    imageView = (MapImageView)findViewById(R.id.picView); 
+	    imageView.setDoubleTapEnabled(false);
 	    drawView = (DrawImageView)findViewById(R.id.drawViewID);
 	    //cood = (TextView)findViewById(R.id.coodID);
 	    
@@ -237,7 +243,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    reset_mapBtn = (Button)findViewById(R.id.reset_mapID);
 	    timeBtn = (Button)findViewById(R.id.timeBtn);
 	    show_infoBtn = (Button)findViewById(R.id.showinfoBtn);
-	    aboutBtn = (Button)findViewById(R.id.aboutBtn);
+	    resetBtn = (Button)findViewById(R.id.resetBtn);
 	    
 	    default_buttons.add(forwardBtn);
 	    default_buttons.add(backwardBtn);
@@ -250,7 +256,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    default_buttons.add(reset_mapBtn);
 	    default_buttons.add(timeBtn);
 	    default_buttons.add(show_infoBtn);
-	    default_buttons.add(aboutBtn);
+	    default_buttons.add(resetBtn);
 	    
 	    res_okBtn = (Button)findViewById(R.id.res_okID);
 	    res_cancelBtn = (Button)findViewById(R.id.res_cancelID);
@@ -260,10 +266,12 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    initSensor();
 	    
 	    segments = new ArrayList<Segment>();
+	    car_point = new PointType(1024, 768);
 	    
 	    origin_bmp=BitmapFactory.decodeResource(this.getBaseContext().getResources(), 
 	    		R.drawable.pic2048).copy(Bitmap.Config.ARGB_8888, true);
 	    imageView.setPointList(segments);
+	    imageView.setCarPoint(car_point);
 	    imageView.drawMap(origin_bmp);
 	    
 	    reserve_mode = false;
@@ -323,6 +331,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 				else if(words.equals("redraw"))
 				{
 					imageView.setPointList(segments);
+					imageView.setCarPoint(car_point);
 					imageView.drawMap(origin_bmp);
 				}
 			}
@@ -416,6 +425,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 				// TODO Auto-generated method stub
 				mSensorManager.unregisterListener(CompassActivity.this);
 				imageView.setRotation(0);
+				imageView.setImageMatrix(new Matrix());
 				initSensor();
 				mSensorManager.registerListener(CompassActivity.this,mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_GAME);  
 			}
@@ -479,6 +489,10 @@ public class CompassActivity extends Activity implements SensorEventListener
 				{
 					send_message = "Return\n";
 				}
+				else if(source == resetBtn)
+				{
+					send_message = "Reset\n";
+				}
 				socket_manager.sendMessage(send_message);
 			}
 	    	
@@ -491,6 +505,7 @@ public class CompassActivity extends Activity implements SensorEventListener
 	    clearBtn.setOnClickListener(new SendBtnListener());
 	    cleanBtn.setOnClickListener(new SendBtnListener());
 	    returnBtn.setOnClickListener(new SendBtnListener());
+	    resetBtn.setOnClickListener(new SendBtnListener());
 	}  
 	
     @Override 

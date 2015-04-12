@@ -24,6 +24,7 @@ public class MapImageView extends ImageViewTouch
 			R.drawable.pic2048).copy(Bitmap.Config.ARGB_8888, true);
 	PointType finget_point;
 	PointType MAP_ORIGIN;
+	PointType car_point;
 	
 	List<Segment> toDraw;
 	
@@ -59,22 +60,10 @@ public class MapImageView extends ImageViewTouch
 		return;
 	}
 	
-	/*public void setPointListWithMatrix(List<Segment> list, Matrix matrix)
-	{
-		toDraw = new ArrayList<Segment>();
-		int i;
-		for(i=0; i<list.size();i++)
-		{
-			Segment seg_now = new Segment(list.get(0));
-			//Log.d("segment", "before: " + list.get(0));
-			seg_now = seg_now.transWithMatrix(matrix);
-			//Log.d("segment", "after: " + list.get(0));
-			toDraw.add(seg_now);
-		}
-		
-		return;
-	}*/
-	
+	public void setCarPoint(PointType car_point) {
+		this.car_point = car_point;
+	}
+
 	public void setMapOrigin(PointType origin)
 	{
 		MAP_ORIGIN = origin;
@@ -120,8 +109,8 @@ public class MapImageView extends ImageViewTouch
 		Paint paint = new Paint();
 		
 		//Draw map
-        paint. setColor(Color.BLUE);
-        paint. setStrokeWidth(10);
+        paint.setColor(Color.rgb(100, 100, 255));
+        paint.setStrokeWidth(10);
         int i;
         for(i=0; i<toDraw.size();i++)
         {
@@ -133,6 +122,10 @@ public class MapImageView extends ImageViewTouch
         	canvas.drawLine((float)tmp_start.x, (float)tmp_start.y, 
         			(float)tmp_end.x, (float)tmp_end.y, paint);
         }
+        
+        //Draw car point
+        paint.setColor(Color.BLACK);
+        canvas.drawCircle((float)car_point.x, (float)car_point.y, 5, paint);
         
         Matrix matrix = getDisplayMatrix();
         setImageBitmap(now_bmp, matrix, ZOOM_INVALID, ZOOM_INVALID);     
