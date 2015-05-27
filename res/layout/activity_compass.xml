@@ -3,7 +3,8 @@
     android:orientation="vertical" 
     android:layout_width="fill_parent" 
     android:layout_height="fill_parent" 
-    android:background="#fff" >  
+    android:background="@drawable/borderstroke"
+    android:padding="2dp">  
     
 	<com.example.remoteapp.MapImageView 
 	    android:id="@+id/picView" 

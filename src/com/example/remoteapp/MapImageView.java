@@ -107,10 +107,11 @@ public class MapImageView extends ImageViewTouch
 		Bitmap now_bmp = Bitmap.createBitmap(base_bmp);
 		Canvas canvas = new Canvas(now_bmp);
 		Paint paint = new Paint();
+		paint.setAntiAlias(true);
 		
 		//Draw map
         paint.setColor(Color.rgb(100, 100, 255));
-        paint.setStrokeWidth(10);
+        paint.setStrokeWidth(5);
         int i;
         for(i=0; i<toDraw.size();i++)
         {
